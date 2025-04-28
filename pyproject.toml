@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectoprep"
+dynamic = ["version"]
+description = "A comprehensive spectral preprocessing toolkit for chemometrics"
+readme = "README.rst"
+authors = [
+  {name = "Habeeb Babatunde", email = "babatundehabeeb2@gmail.com"}
+]
+maintainers = [
+  {name = "Habeeb Babatunde", email = "babatundehabeeb2@gmail.com"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+license = {text = "MIT license"}
+dependencies = [
+  "typer",
+  "bayesian-optimization",
+  "seaborn"
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage",  # testing
+    "mypy",  # linting
+    "pytest",  # testing
+    "ruff",  # linting
+    "sphinx", # documentation
+    "myst-parser",
+    "furo",
+    "sphinx_rtd_theme",
+    "pydata-sphinx-theme",
+    "nbsphinx",
+]
+
+[project.urls]
+
+bugs = "https://github.com/habeeb3579/spectoprep/issues"
+changelog = "https://github.com/habeeb3579/spectoprep/blob/master/changelog.md"
+homepage = "https://github.com/habeeb3579/spectoprep"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+
+
+
+# Mypy
+# ----
+
+[tool.mypy]
+files = "."
+
+# Use strict defaults
+strict = true
+warn_unreachable = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+# Don't require test functions to include types
+module = "tests.*"
+allow_untyped_defs = true
+disable_error_code = "attr-defined"
+
+[tool.setuptools.dynamic]
+version = { attr = "spectoprep.__version__" }
+
+#install with pip install -e .[dev] or pip install -e ".[dev]"
+#build sphinx by cd docs, make html. The cd _build/html and python -m http.server
+#convert rst to md using pip install rst-to-myst[sphinx], pip install myst-parser
+#rst2myst convert docs/**/*.rst
+#pip install sphinx-autobuild (option 2 to build sphinx that tracks changes in the code)
+#sphinx-autobuild docs/source docs/_build/html or sphinx-autobuild docs docs/_build/html
+#make clean (use rm -rf docs/_build instead)
+#to use nbsphinx, pip install nbsphinx and brew install pandoc

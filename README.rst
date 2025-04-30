@@ -99,7 +99,7 @@ Available Preprocessing Methods
 Documentation
 ------------
 
-For detailed documentation, visit `spectroprep.readthedocs.io <https://spectroprep.readthedocs.io>`_.
+For detailed documentation, visit `spectoprep.readthedocs.io <https://spectoprep.readthedocs.io>`_.
 
 Contributing
 -----------

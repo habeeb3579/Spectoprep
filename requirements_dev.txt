@@ -9,4 +9,5 @@ twine==5.0.0
 ruff==0.3.5
 bayesian-optimization,
 seaborn
+nbsphinx
 

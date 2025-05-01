@@ -1,0 +1,92 @@
+name: Issue Management
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  first-response:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    steps:
+      - name: Initial response to new issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Thanks for reporting this issue! We will look into it soon.'
+            });
+
+  triage-issue:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    steps:
+      - name: Add triage label for new issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            if (!context.payload.issue.labels.some(label => label.name === 'triage')) {
+              github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ['triage']
+              });
+            }
+
+  assign-to-project:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'labeled')
+    steps:
+      - name: Assign issues to project
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            // You'll need to replace these with your actual project details
+            const PROJECT_ID = 'YOUR_PROJECT_ID';  // e.g., 'PN_kwDOA1234'
+            const PROJECT_FIELD_ID = 'YOUR_STATUS_FIELD_ID'; // e.g., 'PVTF_lADOB1234'
+            const TODO_OPTION_ID = 'YOUR_TODO_OPTION_ID'; // e.g., '5bdc35a0'
+            
+            // This is a simplified example. The actual GraphQL mutation will depend on your project structure
+            const addToProject = `
+              mutation {
+                addProjectV2ItemById(input: {
+                  projectId: "${PROJECT_ID}"
+                  contentId: "${context.payload.issue.node_id}"
+                }) {
+                  item {
+                    id
+                  }
+                }
+              }
+            `;
+            
+            try {
+              await github.graphql(addToProject);
+              console.log('Successfully added issue to project');
+            } catch (error) {
+              console.error('Error adding to project: ' + error);
+            }
+
+  stale-issues:
+    runs-on: ubuntu-latest
+    # Run this job on a schedule (once a day)
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: 'This issue has been marked as stale due to inactivity for 30 days. It will be closed in 7 days if no further activity occurs.'
+          close-issue-message: 'This issue has been closed due to inactivity. Feel free to reopen if this is still relevant.'
+          stale-issue-label: 'stale'
+          days-before-stale: 30
+          days-before-close: 7
+          exempt-issue-labels: 'bug,enhancement,security,documentation'

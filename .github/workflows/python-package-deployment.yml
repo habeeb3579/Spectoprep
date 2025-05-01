@@ -1,0 +1,290 @@
+name: 📦 Python Package Deployment
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      publish_targets:
+        description: 'Targets to publish to'
+        required: true
+        default: 'pypi'
+        type: choice
+        options:
+          - pypi
+          - conda
+          - both
+
+env:
+  IS_PRODUCTION: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+jobs:
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install project with dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Type check with mypy
+        run: |
+          mypy src/ tests/
+        continue-on-error: true
+
+      - name: Test with pytest
+        run: |
+          pytest tests/ --cov=src --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-conda:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          activate-environment: test-env
+          auto-activate-base: false
+
+      - name: Install dependencies
+        shell: bash -el {0}
+        run: |
+          conda install pytest pytest-cov flake8
+          if [ -f environment.yml ]; then conda env update --file environment.yml
+          elif [ -f requirements.txt ]; then conda install --file requirements.txt
+          fi
+          pip install -e .
+
+      - name: Test with pytest
+        shell: bash -el {0}
+        run: |
+          pytest tests/
+
+  build-pypi:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+          retention-days: 7
+
+  build-conda:
+    needs: test-conda
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: "3.11"
+          activate-environment: build-env
+          auto-activate-base: false
+
+      - name: Install conda-build
+        shell: bash -el {0}
+        run: |
+          conda install conda-build anaconda-client conda-verify
+
+      - name: Build conda package
+        shell: bash -el {0}
+        run: |
+          mkdir -p conda-bld
+          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload
+
+      - name: Upload conda build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-package-distributions
+          path: conda-bld/
+          retention-days: 7
+
+  publish-test-pypi:
+    needs: build-pypi
+    if: env.IS_PRODUCTION == 'false'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install twine
+        run: |
+          python -m pip install --upgrade pip
+          pip install twine
+
+      - name: Publish to TestPyPI
+        run: |
+          twine upload --repository testpypi dist/*
+        env:
+          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+
+  publish-pypi:
+    needs: build-pypi
+    if: env.IS_PRODUCTION == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install twine
+        run: |
+          python -m pip install --upgrade pip
+          pip install twine
+
+      - name: Publish to PyPI
+        run: |
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+
+  publish-conda:
+    needs: build-conda
+    if: env.IS_PRODUCTION == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: conda-package-distributions
+          path: conda-bld/
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: "3.11"
+          activate-environment: publish-env
+          auto-activate-base: false
+
+      - name: Install anaconda-client
+        shell: bash -el {0}
+        run: |
+          conda install anaconda-client
+
+      - name: Upload to Anaconda.org
+        shell: bash -el {0}
+        run: |
+          anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force conda-bld/*/*.tar.bz2
+
+  deploy-docs:
+    needs: [build-pypi, build-conda]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || env.IS_PRODUCTION == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install mkdocs mkdocs-material mkdocstrings[python]
+
+      - name: Build documentation
+        run: |
+          mkdocs build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site

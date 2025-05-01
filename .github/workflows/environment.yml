@@ -1,0 +1,10 @@
+name: Spectoprep
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python >=3.9
+  # Add your dependencies here
+  - pip:
+    - -e .  # Installs the package in development mode
+    # Add pip-only dependencies here

@@ -1,10 +1,33 @@
-name: Spectoprep
+name: spectoprep-ci
 channels:
   - conda-forge
   - defaults
+
 dependencies:
-  - python >=3.9
-  # Add your dependencies here
+  - python>=3.9,<3.13
+  - pip
+  - pytest
+  - pytest-cov
+  - flake8
+  - mypy
+  - coverage
+  - typer
+  - bayesian-optimization
+  - seaborn
+
+  # optional: build tools (useful if you sometimes test build manually)
+  - setuptools
+  - wheel
+  - twine
+
+  # (Optional) docs testing
+  - sphinx
+  - myst-parser
+  - pydata-sphinx-theme
+  - mkdocs
+  - mkdocstrings
+  - nbsphinx
+
+  # Dev install your package via pip
   - pip:
-    - -e .  # Installs the package in development mode
-    # Add pip-only dependencies here
+      - -e .[dev]

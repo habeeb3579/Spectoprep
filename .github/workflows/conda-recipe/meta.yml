@@ -1,13 +1,16 @@
 {% set name = "spectoprep" %}
-{% set version = "0.1.0" %}  # This will be updated by the workflow
+{% set pypi_name = "spectoprep" %}
+
+{% set data = load_setup_py_data() %}  # Load from setup metadata if available
+{% set version = data.get('version') or "0.0.0" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 0000000000000000000000000000000000000000000000000000000000000000  # This will be updated by the workflow
+  url: https://pypi.io/packages/source/{{ pypi_name[0] }}/{{ pypi_name }}/{{ pypi_name }}-{{ version }}.tar.gz
+  sha256: {{ environ.get('PKG_SHA256', '0000000000000000000000000000000000000000000000000000000000000000') }}
 
 build:
   number: 0
@@ -18,11 +21,13 @@ requirements:
   host:
     - python >=3.9
     - pip
-    - setuptools >=61.0.0
+    - setuptools
     - wheel
   run:
     - python >=3.9
-    # Add your runtime dependencies here
+    - typer
+    - bayesian-optimization
+    - seaborn
 
 test:
   imports:
@@ -35,11 +40,10 @@ about:
   license: MIT
   license_family: MIT
   license_file: LICENSE
-  summary: 'Short description of your package'
+  summary: A comprehensive spectral preprocessing toolkit for chemometrics.
   description: |
-    Longer description of your package that can
-    span multiple lines if needed.
-  doc_url: https://habeeb3579.github.io/spectoprep/
+    Spectoprep is a comprehensive spectral preprocessing toolkit supporting major workflows for chemometric pipelines.
+  doc_url: https://github.com/habeeb3579/spectoprep
   dev_url: https://github.com/habeeb3579/spectoprep
 
 extra:

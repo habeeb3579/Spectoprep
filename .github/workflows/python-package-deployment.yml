@@ -31,9 +31,6 @@ on:
           - conda
           - both
 
-env:
-  IS_PRODUCTION: ${{ startsWith(github.ref, 'refs/tags/v') }}
-
 jobs:
 
   test:
@@ -174,7 +171,7 @@ jobs:
 
   publish-test-pypi:
     needs: build-pypi
-    if: env.IS_PRODUCTION == 'false'
+    if: github.ref != 'refs/tags/v*' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -203,7 +200,7 @@ jobs:
 
   publish-pypi:
     needs: build-pypi
-    if: env.IS_PRODUCTION == 'true'
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -232,7 +229,7 @@ jobs:
 
   publish-conda:
     needs: build-conda
-    if: env.IS_PRODUCTION == 'true'
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -262,7 +259,7 @@ jobs:
 
   deploy-docs:
     needs: [build-pypi, build-conda]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || env.IS_PRODUCTION == 'true')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

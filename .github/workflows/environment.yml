@@ -2,7 +2,6 @@ name: spectoprep-ci
 channels:
   - conda-forge
   - defaults
-
 dependencies:
   - python>=3.9,<3.13
   - pip
@@ -14,12 +13,10 @@ dependencies:
   - typer
   - bayesian-optimization
   - seaborn
-
   # optional: build tools (useful if you sometimes test build manually)
   - setuptools
   - wheel
   - twine
-
   # (Optional) docs testing
   - sphinx
   - myst-parser
@@ -27,7 +24,6 @@ dependencies:
   - mkdocs
   - mkdocstrings
   - nbsphinx
-
   # Dev install your package via pip
   - pip:
-      - -e .[dev]
+    - -e .[dev]

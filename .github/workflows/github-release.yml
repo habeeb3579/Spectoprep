@@ -1,0 +1,99 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Get Changelog Entry
+        id: changelog_reader
+        run: |
+          CHANGELOG_FILE="CHANGELOG.md"
+          
+          if [ ! -f "$CHANGELOG_FILE" ]; then
+            echo "CHANGELOG file not found. Creating release notes from git commits."
+            LATEST_TAG=$(git describe --tags --abbrev=0 ${{ env.TAG }}^ 2>/dev/null || echo "")
+            
+            if [ -z "$LATEST_TAG" ]; then
+              # If this is the first tag, get all commits
+              COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse)
+            else
+              # Get commits between the last tag and this tag
+              COMMITS=$(git log $LATEST_TAG..${{ env.TAG }} --pretty=format:"* %s (%h)" --reverse)
+            fi
+            
+            # Create release notes
+            RELEASE_NOTES="## Changes in ${{ env.VERSION }}\n\n"
+            RELEASE_NOTES+="$COMMITS"
+          else
+            # Extract current version section from CHANGELOG
+            SECTION_HEADER="## \[${{ env.VERSION }}\]"
+            NEXT_SECTION_PATTERN="## \["
+            
+            CHANGELOG_CONTENT=$(cat "$CHANGELOG_FILE")
+            
+            # Find start of current version section
+            SECTION_START=$(echo "$CHANGELOG_CONTENT" | grep -n "$SECTION_HEADER" | cut -d: -f1)
+            
+            if [ -z "$SECTION_START" ]; then
+              echo "Version ${{ env.VERSION }} not found in CHANGELOG. Using tag message."
+              RELEASE_NOTES="Release of version ${{ env.VERSION }}"
+            else
+              # Find start of next version section
+              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 1 | cut -d: -f1)
+              
+              if [ -z "$NEXT_SECTION_START" ]; then
+                # If no next section, take everything after current section start
+                RELEASE_NOTES=$(tail -n +$SECTION_START "$CHANGELOG_FILE")
+              else
+                # Calculate end of current section
+                SECTION_END=$((SECTION_START + NEXT_SECTION_START - 1))
+                RELEASE_NOTES=$(sed -n "${SECTION_START},${SECTION_END}p" "$CHANGELOG_FILE")
+              fi
+            fi
+          fi
+          
+          # Escape multiline string for GitHub Actions
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+          
+          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
+
+      - name: Download artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: python-package-deployment.yml
+          name: python-package-distributions
+          path: dist/
+          if_no_artifact_found: warn
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ env.VERSION }}
+          body: ${{ env.RELEASE_NOTES }}
+          draft: false
+          prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
+          files: |
+            dist/*
+            LICENSE
+            README.md

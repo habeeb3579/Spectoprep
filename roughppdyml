@@ -118,17 +118,6 @@ jobs:
           pytest tests/
         timeout-minutes: 10
 
-  update-changelog:
-    needs: [test]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger changelog workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: update-changelog
-
   build-pypi:
     needs: test
     runs-on: ubuntu-latest
@@ -224,17 +213,8 @@ jobs:
         shell: bash -el {0}
         run: |
           # Extract the correct version dynamically
-          if [ -f "setup.py" ]; then
-            PKG_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" setup.py || python setup.py --version)
-          elif [ -f "pyproject.toml" ]; then
-            PKG_VERSION=$(grep -oP "version = ['\"]\\K[^'\"]*" pyproject.toml)
-          elif [ -f "__init__.py" ]; then
-            PKG_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" __init__.py)
-          else
-            # Default fallback
-            PKG_VERSION=$(python -c "from setuptools_scm import get_version; print(get_version())")
-          fi
-          
+          # export PKG_VERSION=$(python -c "import spectoprep; print(spectoprep.__version__)")
+          export PKG_VERSION=$(grep -Eo '__version__ = "[0-9]+\.[0-9]+\.[0-9]+"' spectoprep/__init__.py | cut -d'"' -f2)
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
           echo "Building Conda package with version $PKG_VERSION"
           
@@ -260,6 +240,9 @@ jobs:
           name: conda-package-distributions
           path: conda-bld/
           retention-days: 7
+
+
+
 
   publish-test-pypi:
     needs: build-pypi
@@ -305,6 +288,7 @@ jobs:
           # user: ${{ secrets.TEST_PYPI_USERNAME }}
           verbose: true
           skip-existing: true  # Skip if the version exists
+
 
   publish-pypi:
     needs: build-pypi
@@ -378,29 +362,6 @@ jobs:
         shell: bash -el {0}
         run: |
           anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force conda-bld/*/*.tar.bz2
-
-  trigger-release:
-    needs: [publish-pypi, publish-conda]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Extract tag info
-        id: tag_info
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG_NAME#v}
-          echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_ENV
-      
-      - name: Trigger GitHub Release workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: create-github-release
-          client-payload: '{"tag": "${{ env.tag_name }}", "version": "${{ env.version }}"}'
 
   # Optional: Only if you want to publish to GitHub Pages in addition to ReadTheDocs
   deploy-sphinx-docs:

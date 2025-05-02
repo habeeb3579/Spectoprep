@@ -22,7 +22,7 @@ if check_file "pyproject.toml"; then
   echo "Found pyproject.toml, extracting version with Python..."
   
   # Use Python to parse TOML properly - handles all common project structures
-  PKG_VERSION=$(python -c "
+  PKG_VERSION=$(python -c '
 import re
 import sys
 
@@ -35,36 +35,36 @@ try:
             import tomli as tomllib
         except ImportError:
             # Fall back to regex if no TOML parser is available
-            raise ImportError('No TOML parser available')
+            raise ImportError("No TOML parser available")
     
-    with open('pyproject.toml', 'rb') as f:
+    with open("pyproject.toml", "rb") as f:
         data = tomllib.load(f)
         # Check common locations for version
-        if 'project' in data and 'version' in data['project']:
-            print(data['project']['version'])
-        elif 'tool' in data:
-            if 'poetry' in data['tool'] and 'version' in data['tool']['poetry']:
-                print(data['tool']['poetry']['version'])
-            elif 'hatch' in data['tool'] and 'version' in data['tool']['hatch']:
-                print(data['tool']['hatch']['version'])
+        if "project" in data and "version" in data["project"]:
+            print(data["project"]["version"])
+        elif "tool" in data:
+            if "poetry" in data["tool"] and "version" in data["tool"]["poetry"]:
+                print(data["tool"]["poetry"]["version"])
+            elif "hatch" in data["tool"] and "version" in data["tool"]["hatch"]:
+                print(data["tool"]["hatch"]["version"])
             else:
                 # Fall back to regex as last resort
-                raise KeyError('Version not found in expected locations')
+                raise KeyError("Version not found in expected locations")
         else:
-            raise KeyError('No project metadata found')
+            raise KeyError("No project metadata found")
 except Exception:
     # Fall back to regex method
     try:
-        with open('pyproject.toml', 'r') as f:
+        with open("pyproject.toml", "r") as f:
             content = f.read()
-        match = re.search(r'version\s*=\s*[\'\"](.*?)[\'\"]', content)
+        match = re.search(r"version\s*=\s*[\'\"](.*?)[\'\"]", content)
         if match:
             print(match.group(1))
         else:
-            print('')
+            print("")
     except Exception:
-        print('')
-" 2>/dev/null || echo "")
+        print("")
+' 2>/dev/null || echo "")
 fi
 
 # Second attempt: Try looking for __version__ in Python files

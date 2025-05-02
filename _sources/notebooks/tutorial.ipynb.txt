@@ -1,0 +1,59 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "cellUniqueIdByVincent": "135ae"
+   },
+   "source": [
+    "# Tutorial\n",
+    "\n",
+    "Spectoprep is very easy to use! import the function"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "cellUniqueIdByVincent": "bb2a9"
+   },
+   "outputs": [],
+   "source": [
+    "from spectoprep import PipelineOptimizer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "cellUniqueIdByVincent": "f5010"
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python (pypackage)",
+   "language": "python",
+   "name": "pypackage"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.9"
+  },
+  "vincent": {
+   "sessionId": "1504f563ff431698b5461749_2025-04-25T05-50-32-823Z"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

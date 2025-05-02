@@ -97,6 +97,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           activate-environment: test-env
           auto-activate-base: false
+          channels: conda-forge,defaults
 
       - name: Install dependencies
         shell: bash -el {0}
@@ -134,11 +135,15 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build wheel setuptools
+          pip install build wheel setuptools twine
 
       - name: Build package
         run: |
           python -m build
+
+      - name: Check package
+        run: |
+          twine check dist/*
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -185,11 +190,24 @@ jobs:
           python-version: "3.11"
           activate-environment: build-env
           auto-activate-base: false
+          channels: conda-forge,defaults
 
-      - name: Install conda-build
+      - name: Install conda-build and debug dependencies
         shell: bash -el {0}
         run: |
           conda install -y conda-build anaconda-client conda-verify
+          conda config --show-sources
+          conda config --show channels
+          conda info
+
+      # Check available packages to verify channel configuration
+      - name: Check if bayesian-optimization exists in available channels
+        shell: bash -el {0}
+        run: |
+          conda search bayesian-optimization
+          # Add conda-forge explicitly
+          conda config --add channels conda-forge
+          conda search bayesian-optimization
 
       - name: Build conda package
         shell: bash -el {0}
@@ -198,8 +216,8 @@ jobs:
           # Print meta.yaml for debugging
           echo "Contents of meta.yaml:"
           cat conda-recipe/meta.yaml
-          # Build the package
-          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload
+          # Build the package with conda-forge channel
+          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload --channel conda-forge
 
       - name: Upload conda build artifacts
         uses: actions/upload-artifact@v4
@@ -220,19 +238,30 @@ jobs:
           name: python-package-distributions
           path: dist/
 
+      # List the files for debugging
+      - name: List distribution files
+        run: ls -la dist/
+
+      # Set up Python and twine
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
+          
       - name: Install twine
         run: |
           python -m pip install --upgrade pip
           pip install twine
-
+          
+      # Check package with twine
+      - name: Check distributions
+        run: |
+          twine check dist/*
+          
+      # Publish to TestPyPI using twine with username/password
       - name: Publish to TestPyPI
         run: |
-          twine upload --repository testpypi dist/*
+          twine upload --repository testpypi dist/* --verbose --skip-existing
         env:
           TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
@@ -249,19 +278,30 @@ jobs:
           name: python-package-distributions
           path: dist/
 
+      # List the files for debugging
+      - name: List distribution files
+        run: ls -la dist/
+
+      # Set up Python and twine
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
+          
       - name: Install twine
         run: |
           python -m pip install --upgrade pip
           pip install twine
-
+          
+      # Check package with twine
+      - name: Check distributions
+        run: |
+          twine check dist/*
+          
+      # Publish to PyPI using twine with username/password
       - name: Publish to PyPI
         run: |
-          twine upload dist/*
+          twine upload dist/* --verbose
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -285,6 +325,7 @@ jobs:
           python-version: "3.11"
           activate-environment: publish-env
           auto-activate-base: false
+          channels: conda-forge,defaults
 
       - name: Install anaconda-client
         shell: bash -el {0}
@@ -296,7 +337,8 @@ jobs:
         run: |
           anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force conda-bld/*/*.tar.bz2
 
-  deploy-docs:
+  # Optional: Only if you want to publish to GitHub Pages in addition to ReadTheDocs
+  deploy-sphinx-docs:
     needs: [build-pypi]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
@@ -312,15 +354,19 @@ jobs:
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-          pip install mkdocs mkdocs-material mkdocstrings[python]
+          pip install -e ".[dev]" || pip install -e .
+          pip install -r docs/requirements.txt
+          pip list
 
-      - name: Build documentation
+      - name: Build Sphinx documentation
         run: |
-          mkdocs build
+          cd docs
+          make clean
+          make html
+          touch _build/html/.nojekyll  # Prevent Jekyll processing on GitHub Pages
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+          publish_dir: ./docs/_build/html

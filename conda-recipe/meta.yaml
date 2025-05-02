@@ -41,7 +41,7 @@ about:
   summary: A comprehensive spectral preprocessing toolkit for chemometrics.
   description: |
     Spectoprep is a comprehensive spectral preprocessing toolkit supporting major workflows for chemometric pipelines.
-  doc_url: https://github.com/habeeb3579/spectoprep
+  doc_url: https://habeeb3579.github.io/spectoprep
   dev_url: https://github.com/habeeb3579/spectoprep
 
 extra:

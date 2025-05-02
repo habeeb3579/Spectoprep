@@ -213,7 +213,9 @@ jobs:
         shell: bash -el {0}
         run: |
           # Extract the correct version dynamically
-          export PKG_VERSION=$(python -c "import spectoprep; print(spectoprep.__version__)")
+          # export PKG_VERSION=$(python -c "import spectoprep; print(spectoprep.__version__)")
+          export PKG_VERSION=$(grep -Eo '__version__ = "[0-9]+\.[0-9]+\.[0-9]+"' spectoprep/__init__.py | cut -d'"' -f2)
+          echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
           echo "Building Conda package with version $PKG_VERSION"
           
           # Create a correct conda-recipe/meta.yaml dynamically
@@ -248,6 +250,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -274,13 +278,17 @@ jobs:
         run: |
           twine check dist/*
           
-      # Publish to TestPyPI using twine with username/password
+      # Publish to TestPyPI using trusted publishing
       - name: Publish to TestPyPI
-        run: |
-          twine upload --repository testpypi dist/* --verbose --skip-existing
-        env:
-          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          # Uncomment the following if you're not using trusted publishing
+          # user: ${{ secrets.TEST_PYPI_USERNAME }}
+          verbose: true
+          skip-existing: true  # Skip if the version exists
+
 
   publish-pypi:
     needs: build-pypi
@@ -288,6 +296,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -314,13 +324,13 @@ jobs:
         run: |
           twine check dist/*
           
-      # Publish to PyPI using twine with username/password
+      # Publish to PyPI using trusted publishing
       - name: Publish to PyPI
-        run: |
-          twine upload dist/* --verbose
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          # Uncomment the following if you're not using trusted publishing
+          # password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-conda:
     needs: build-conda
@@ -366,6 +376,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+      - name: Install Pandoc (required for nbsphinx)
+        run: sudo apt-get update && sudo apt-get install -y pandoc
 
       - name: Install documentation dependencies
         run: |

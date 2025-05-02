@@ -118,17 +118,6 @@ jobs:
           pytest tests/
         timeout-minutes: 10
 
-  update-changelog:
-    needs: [test]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger changelog workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: update-changelog
-
   build-pypi:
     needs: test
     runs-on: ubuntu-latest
@@ -165,6 +154,8 @@ jobs:
 
   build-conda:
     needs: test-conda
+    # Only run this job if we're pushing (any event) or if we manually trigger with conda or both as targets
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -220,29 +211,10 @@ jobs:
           conda config --add channels conda-forge
           conda search bayesian-optimization
 
-      - name: Setup PKG_VERSION and PKG_SHA256
-        shell: bash -el {0}
+      - name: Extract package version
         run: |
-          # Extract the correct version dynamically
-          if [ -f "setup.py" ]; then
-            PKG_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" setup.py || python setup.py --version)
-          elif [ -f "pyproject.toml" ]; then
-            PKG_VERSION=$(grep -oP "version = ['\"]\\K[^'\"]*" pyproject.toml)
-          elif [ -f "__init__.py" ]; then
-            PKG_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" __init__.py)
-          else
-            # Default fallback
-            PKG_VERSION=$(python -c "from setuptools_scm import get_version; print(get_version())")
-          fi
-          
-          echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
-          echo "Building Conda package with version $PKG_VERSION"
-          
-          # Create a correct conda-recipe/meta.yaml dynamically
-          sed -i "s/{% set version = .*/{% set version = \"$PKG_VERSION\" %}/" conda-recipe/meta.yaml
-
-          echo "Updated meta.yaml version:"
-          grep "{% set version" conda-recipe/meta.yaml
+          .github/scripts/extract_version.sh
+        shell: bash
         
       - name: Build conda package
         shell: bash -el {0}
@@ -263,7 +235,10 @@ jobs:
 
   publish-test-pypi:
     needs: build-pypi
-    if: github.ref != 'refs/tags/v*' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    # Run if either:
+    # - It's a push to main/master (but not a tag)
+    # - It's a manual workflow run with "staging" environment selected
+    if: (github.event_name == 'push' && github.ref != 'refs/tags/v*' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -308,7 +283,10 @@ jobs:
 
   publish-pypi:
     needs: build-pypi
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Run if either:
+    # - It's a push with a tag starting with 'v'
+    # - It's a manual workflow run with "production" environment selected AND publish_targets is either "pypi" or "both"
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production' && (github.event.inputs.publish_targets == 'pypi' || github.event.inputs.publish_targets == 'both'))
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -350,7 +328,10 @@ jobs:
 
   publish-conda:
     needs: build-conda
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Run if either:
+    # - It's a push with a tag starting with 'v'
+    # - It's a manual workflow run with "production" environment selected AND publish_targets is either "conda" or "both"
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production' && (github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'))
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -379,33 +360,11 @@ jobs:
         run: |
           anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force conda-bld/*/*.tar.bz2
 
-  trigger-release:
-    needs: [publish-pypi, publish-conda]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Extract tag info
-        id: tag_info
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG_NAME#v}
-          echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_ENV
-      
-      - name: Trigger GitHub Release workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: create-github-release
-          client-payload: '{"tag": "${{ env.tag_name }}", "version": "${{ env.version }}"}'
-
   # Optional: Only if you want to publish to GitHub Pages in addition to ReadTheDocs
   deploy-sphinx-docs:
     needs: [build-pypi]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
+    # Only deploy docs for push events to main/master, tags, or manual workflow runs with production environment
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,16 +1,15 @@
-==========
 SpectroPrep
-==========
+===========
 
 .. image:: https://img.shields.io/pypi/v/spectoprep.svg
-        :target: https://pypi.python.org/pypi/spectoprep
+    :target: https://pypi.python.org/pypi/spectoprep
 
 .. image:: https://img.shields.io/travis/habeeb3579/spectoprep.svg
-        :target: https://travis-ci.com/habeeb3579/spectoprep
+    :target: https://travis-ci.com/habeeb3579/spectoprep
 
 .. image:: https://readthedocs.org/projects/spectoprep/badge/?version=latest
-        :target: https://spectoprep.readthedocs.io/en/latest/?version=latest
-        :alt: Documentation Status
+    :target: https://spectoprep.readthedocs.io/en/latest/?version=latest
+    :alt: Documentation Status
 
 Spectroscopy preprocessing using Bayesian Optimization
 
@@ -28,33 +27,33 @@ Features
 - **Configurable Pipeline Length**: Control maximum preprocessing steps and allowed combinations
 
 Installation
------------
+------------
 
 .. code-block:: bash
 
-    pip install spectroprep
+    pip install spectoprep
 
 Quick Start
-----------
+-----------
 
 .. code-block:: python
 
     from spectroprep.pipeline.optimizer import PipelineOptimizer
     import numpy as np
-    
+
     # Prepare your data
     X_train = np.array(...)  # Your spectral data matrix
     y_train = np.array(...)  # Your target values
     groups = np.array(...)   # Optional group labels for cross-validation
-    
+
     # Initialize the optimizer
     optimizer = PipelineOptimizer(
         X_train=X_train,
         y_train=y_train,
         X_test=None,
         y_test=None,
-        preprocessing_steps=['msc', 'savgol', 'detrend', 'scaler', 'snv', 
-                            'robust_scaler', 'emsc', 'meancn'],
+        preprocessing_steps=['msc', 'savgol', 'detrend', 'scaler', 'snv',
+                              'robust_scaler', 'emsc', 'meancn'],
         cv_method="group_shuffle_split",
         n_splits=3,
         random_state=21,
@@ -62,28 +61,28 @@ Quick Start
         max_pipeline_length=2,
         allowed_preprocess_combinations=[1, 2]
     )
-    
+
     # Run Bayesian optimization to find the best pipeline
     best_params, best_pipeline = optimizer.bayesian_optimize(
         init_points=50,
         n_iter=1000
     )
-    
+
     # Extract preprocessing steps without the final model
     custom_preprocessing = []
     for name, step in best_pipeline.steps[:-1]:
         custom_preprocessing.append((name, step))
-    
+
     # Print optimization summary
     summary = optimizer.summarize_optimization()
     print(f"Best pipeline configuration: {summary['best_pipeline']}")
     print(f"Best RMSE: {summary['best_rmse']:.4f}")
-    
+
     # Make predictions with the optimized pipeline
     predictions, rmse, r2 = optimizer.get_best_pipeline_predictions(best_pipeline)
 
 Available Preprocessing Methods
-------------------------------
+-------------------------------
 
 - **msc**: Multiplicative Scatter Correction
 - **savgol**: Savitzky-Golay filtering
@@ -97,12 +96,12 @@ Available Preprocessing Methods
 - **select_k_best**: Feature selection
 
 Documentation
-------------
+-------------
 
 For detailed documentation, visit `spectoprep.readthedocs.io <https://spectoprep.readthedocs.io>`_.
 
 Contributing
------------
+------------
 
 We welcome contributions! Please feel free to submit a Pull Request.
 

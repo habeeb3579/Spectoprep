@@ -209,6 +209,16 @@ jobs:
           conda config --add channels conda-forge
           conda search bayesian-optimization
 
+      - name: Setup PKG_VERSION and PKG_SHA256
+        shell: bash -el {0}
+        run: |
+          # Extract the correct version dynamically
+          export PKG_VERSION=$(python -c "import spectoprep; print(spectoprep.__version__)")
+          echo "Building Conda package with version $PKG_VERSION"
+          
+          # Create a correct conda-recipe/meta.yaml dynamically
+          sed -i "s/{% set version = .*/{% set version = \"$PKG_VERSION\" %}/" conda-recipe/meta.yaml
+        
       - name: Build conda package
         shell: bash -el {0}
         run: |

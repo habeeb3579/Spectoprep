@@ -1,7 +1,6 @@
 {% set name = "spectoprep" %}
 {% set pypi_name = "spectoprep" %}
-{% set data = load_setup_py_data() %}
-{% set version = data.get('version') or "0.0.0" %}
+{% set version = "0.1.0" %}   # This will be dynamically updated during CI/CD
 
 package:
   name: {{ name|lower }}

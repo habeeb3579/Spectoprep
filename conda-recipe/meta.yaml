@@ -1,7 +1,6 @@
 {% set name = "spectoprep" %}
 {% set pypi_name = "spectoprep" %}
-
-{% set data = load_setup_py_data() %}  # Load from setup metadata if available
+{% set data = load_setup_py_data() %}
 {% set version = data.get('version') or "0.0.0" %}
 
 package:
@@ -9,8 +8,7 @@ package:
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ pypi_name[0] }}/{{ pypi_name }}/{{ pypi_name }}-{{ version }}.tar.gz
-  sha256: {{ environ.get('PKG_SHA256', '0000000000000000000000000000000000000000000000000000000000000000') }}
+  path: ..  # Points to the repository root
 
 build:
   number: 0

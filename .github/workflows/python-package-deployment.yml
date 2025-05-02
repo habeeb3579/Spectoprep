@@ -218,6 +218,9 @@ jobs:
           
           # Create a correct conda-recipe/meta.yaml dynamically
           sed -i "s/{% set version = .*/{% set version = \"$PKG_VERSION\" %}/" conda-recipe/meta.yaml
+
+          echo "Updated meta.yaml version:"
+          grep "{% set version" conda-recipe/meta.yaml
         
       - name: Build conda package
         shell: bash -el {0}
@@ -235,6 +238,9 @@ jobs:
           name: conda-package-distributions
           path: conda-bld/
           retention-days: 7
+
+
+
 
   publish-test-pypi:
     needs: build-pypi

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# Version extraction script optimized for pyproject.toml-based projects
-# Sets environment variables for GitHub Actions
+# Version extraction script for Python projects
+# Sets environment variables for GitHub Actions and updates conda-recipe/meta.yaml
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "Extracting package version from pyproject.toml..."
+echo "Extracting package version..."
 PKG_VERSION=""
 
-# Function to check if file exists and is readable
+# Helper function to check if file exists and is readable
 check_file() {
   if [ -f "$1" ] && [ -r "$1" ]; then
     return 0
@@ -17,135 +17,111 @@ check_file() {
   fi
 }
 
-# Check for pyproject.toml
+# First attempt: Try using Python to extract from pyproject.toml (most reliable)
 if check_file "pyproject.toml"; then
-  echo "Found pyproject.toml, attempting to extract version..."
+  echo "Found pyproject.toml, extracting version with Python..."
   
-  # Method 1: Try with grep
-  PKG_VERSION=$(grep -oP "version\s*=\s*['\"]\\K[^'\"]*" pyproject.toml 2>/dev/null || true)
-  
-  # Method 2: Try with Python and regex if grep failed
-  if [ -z "$PKG_VERSION" ]; then
-    echo "Trying Python regex to extract version..."
-    PKG_VERSION=$(python -c "import re; f = open('pyproject.toml', 'r').read(); print(re.search(r'version\s*=\s*[\'\"](.*?)[\'\"]', f).group(1))" 2>/dev/null || true)
-  fi
-  
-  # Method 3: Try with Python and proper TOML parsing
-  if [ -z "$PKG_VERSION" ]; then
-    echo "Trying TOML parsing..."
-    
-    # Try with tomlkit first (more common with Poetry)
-    PKG_VERSION=$(python -c "
+  # Use Python to parse TOML properly - handles all common project structures
+  PKG_VERSION=$(python -c "
+import re
+import sys
+
 try:
-    import tomlkit
-    data = tomlkit.parse(open('pyproject.toml').read())
-    # Check for Poetry structure
-    if 'tool' in data and 'poetry' in data['tool']:
-        print(data['tool']['poetry']['version'])
-    # Check for standard PEP 621 project metadata
-    elif 'project' in data:
-        print(data['project']['version'])
-    else:
-        print('')
-except Exception as e:
-    print('')
-" 2>/dev/null || true)
+    # First try with tomli (Python 3.11+ has tomllib built-in)
+    try:
+        import tomllib
+    except ImportError:
+        try:
+            import tomli as tomllib
+        except ImportError:
+            # Fall back to regex if no TOML parser is available
+            raise ImportError('No TOML parser available')
     
-    # If tomlkit failed, try with tomli (PEP 621 compliant parser)
-    if [ -z "$PKG_VERSION" ]; then
-      PKG_VERSION=$(python -c "
-try:
-    import tomli
     with open('pyproject.toml', 'rb') as f:
-        data = tomli.load(f)
-        # Check for standard PEP 621 project metadata
-        if 'project' in data:
+        data = tomllib.load(f)
+        # Check common locations for version
+        if 'project' in data and 'version' in data['project']:
             print(data['project']['version'])
-        # Check for Poetry structure
-        elif 'tool' in data and 'poetry' in data['tool']:
-            print(data['tool']['poetry']['version'])
-        # Check for other common tools
         elif 'tool' in data:
-            for tool in ['flit', 'hatch', 'setuptools']:
-                if tool in data['tool'] and 'version' in data['tool'][tool]:
-                    print(data['tool'][tool]['version'])
-                    break
+            if 'poetry' in data['tool'] and 'version' in data['tool']['poetry']:
+                print(data['tool']['poetry']['version'])
+            elif 'hatch' in data['tool'] and 'version' in data['tool']['hatch']:
+                print(data['tool']['hatch']['version'])
+            else:
+                # Fall back to regex as last resort
+                raise KeyError('Version not found in expected locations')
+        else:
+            raise KeyError('No project metadata found')
+except Exception:
+    # Fall back to regex method
+    try:
+        with open('pyproject.toml', 'r') as f:
+            content = f.read()
+        match = re.search(r'version\s*=\s*[\'\"](.*?)[\'\"]', content)
+        if match:
+            print(match.group(1))
         else:
             print('')
-except Exception as e:
-    print('')
-" 2>/dev/null || true)
-    fi
-    
-    # Last resort: try the built-in configparser module with a workaround
-    if [ -z "$PKG_VERSION" ]; then
-      PKG_VERSION=$(python -c "
-try:
-    # Create a temporary file with section headers for configparser
-    import tempfile, os
-    with open('pyproject.toml', 'r') as src:
-        content = '[dummy_section]\n' + src.read()
-    
-    temp = tempfile.NamedTemporaryFile(delete=False)
-    with open(temp.name, 'w') as dst:
-        dst.write(content)
-    
-    import configparser
-    config = configparser.ConfigParser()
-    config.read(temp.name)
-    
-    # Look for version in common locations
-    if 'version' in config['dummy_section']:
-        print(config['dummy_section']['version'].strip('\"').strip(\"'\"))
-    else:
+    except Exception:
         print('')
-        
-    # Clean up
-    os.unlink(temp.name)
-except Exception as e:
-    print('')
-" 2>/dev/null || true)
-    fi
-  fi
-  
-  echo "Extracted version: $PKG_VERSION"
-else
-  echo "ERROR: pyproject.toml file not found in current directory"
+" 2>/dev/null || echo "")
 fi
 
-# If still no version found, try looking in __init__.py
+# Second attempt: Try looking for __version__ in Python files
 if [ -z "$PKG_VERSION" ]; then
-  echo "No version found in pyproject.toml, checking __init__.py files..."
+  echo "Looking for __version__ in Python files..."
   
-  # Find all __init__.py files
-  INIT_FILES=$(find . -type f -name "__init__.py" -not -path "*/\.*" -not -path "*/venv/*" -not -path "*/tests/*" 2>/dev/null || true)
+  # Find likely module directories (src or package name directories)
+  PACKAGE_DIRS=$(find . -maxdepth 2 -type d -not -path '*/\.*' -not -path '*/venv*' -not -path '*/tests*' -not -path './docs*' 2>/dev/null || echo "")
   
-  # Loop through each file
-  for INIT_FILE in $INIT_FILES; do
-    echo "Checking $INIT_FILE..."
-    PKG_VERSION=$(grep -oP "__version__\s*=\s*['\"]\\K[^'\"]*" "$INIT_FILE" 2>/dev/null || true)
-    if [ -n "$PKG_VERSION" ]; then
-      echo "Found version $PKG_VERSION in $INIT_FILE"
-      break
+  # Check each directory for __init__.py with version
+  for DIR in $PACKAGE_DIRS; do
+    if [ -f "$DIR/__init__.py" ]; then
+      echo "Checking $DIR/__init__.py..."
+      VERSION_LINE=$(grep -E '__version__\s*=\s*' "$DIR/__init__.py" 2>/dev/null || echo "")
+      if [ -n "$VERSION_LINE" ]; then
+        PKG_VERSION=$(echo "$VERSION_LINE" | grep -oP '__version__\s*=\s*[\'"]?\K[^\'"]*')
+        if [ -n "$PKG_VERSION" ]; then
+          echo "Found version $PKG_VERSION in $DIR/__init__.py"
+          break
+        fi
+      fi
     fi
   done
 fi
 
-# Final fallback to a default version if nothing else worked
+# Third attempt: Look in setup.py or setup.cfg
+if [ -z "$PKG_VERSION" ]; then
+  if check_file "setup.py"; then
+    echo "Checking setup.py..."
+    PKG_VERSION=$(grep -oP 'version\s*=\s*[\'"]?\K[^\'"]*' setup.py 2>/dev/null || echo "")
+  fi
+  
+  if [ -z "$PKG_VERSION" ] && check_file "setup.cfg"; then
+    echo "Checking setup.cfg..."
+    PKG_VERSION=$(grep -oP 'version\s*=\s*\K.*' setup.cfg 2>/dev/null || echo "")
+  fi
+fi
+
+# Final fallback to a default version
 if [ -z "$PKG_VERSION" ]; then
   echo "WARNING: Could not determine package version automatically."
   echo "Using fallback version 0.1.0"
   PKG_VERSION="0.1.0"
 fi
 
+# Clean up version string (remove whitespace, quotes)
+PKG_VERSION=$(echo "$PKG_VERSION" | tr -d "[:space:]\"'")
+
 # Set the version in the GitHub environment
 echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
-echo "Building Conda package with version $PKG_VERSION"
+echo "Building with version $PKG_VERSION"
 
 # Update the meta.yaml file
 if [ -f "conda-recipe/meta.yaml" ]; then
   echo "Updating conda-recipe/meta.yaml with version $PKG_VERSION..."
-  # Different sed syntax required for macOS
+  
+  # Different sed syntax required for macOS vs Linux
   if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s/{% set version = .*/{% set version = \"$PKG_VERSION\" %}/" conda-recipe/meta.yaml
   else

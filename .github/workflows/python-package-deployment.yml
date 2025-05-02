@@ -35,12 +35,12 @@ jobs:
 
   test:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20  # Add timeout to prevent stuck jobs
+    timeout-minutes: 20
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-      fail-fast: false  # Continue with other matrix jobs if one fails
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
 
@@ -69,7 +69,6 @@ jobs:
       - name: Test with pytest
         run: |
           pytest tests/ --cov=src --cov-report=xml
-        # Add test timeout to avoid hanging tests
         timeout-minutes: 10
 
       - name: Upload coverage to Codecov
@@ -109,7 +108,6 @@ jobs:
             conda install -y --file requirements.txt
           fi
           pip install -e .
-        # Add timeout to prevent stalled installations
         timeout-minutes: 10
 
       - name: Test with pytest
@@ -141,7 +139,7 @@ jobs:
         run: |
           python -m build
 
-      - name: Check package
+      - name: Check package with twine
         run: |
           twine check dist/*
 
@@ -154,7 +152,6 @@ jobs:
 
   build-conda:
     needs: test-conda
-    # Only run this job if we're pushing (any event) or if we manually trigger with conda or both as targets
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'
     runs-on: ubuntu-latest
     steps:
@@ -162,26 +159,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      # First, check if conda-recipe is in the current location or .github/workflow
-      - name: Check conda-recipe location and copy if needed
+      - name: Locate conda-recipe directory
+        id: find-recipe
         run: |
-          if [ -d ".github/workflow/conda-recipe" ]; then
-            echo "Found conda-recipe in .github/workflow, copying to root..."
+          if [ -d "conda-recipe" ]; then
+            echo "recipe_dir=conda-recipe" >> $GITHUB_OUTPUT
+          elif [ -d ".github/workflow/conda-recipe" ]; then
+            echo "recipe_dir=.github/workflow/conda-recipe" >> $GITHUB_OUTPUT
             mkdir -p conda-recipe
             cp -r .github/workflow/conda-recipe/* conda-recipe/
           elif [ -d ".github/workflows/conda-recipe" ]; then
-            echo "Found conda-recipe in .github/workflows, copying to root..."
+            echo "recipe_dir=.github/workflows/conda-recipe" >> $GITHUB_OUTPUT
             mkdir -p conda-recipe
             cp -r .github/workflows/conda-recipe/* conda-recipe/
-          fi
-          
-          if [ ! -d "conda-recipe" ]; then
-            echo "Error: conda-recipe directory not found"
+          else
+            echo "::error::No conda-recipe directory found"
             exit 1
           fi
           
           if [ ! -f "conda-recipe/meta.yaml" ]; then
-            echo "Error: conda-recipe/meta.yaml file not found"
+            echo "::error::conda-recipe/meta.yaml file not found"
             exit 1
           fi
 
@@ -194,22 +191,10 @@ jobs:
           auto-activate-base: false
           channels: conda-forge,defaults
 
-      - name: Install conda-build and debug dependencies
+      - name: Install conda-build dependencies
         shell: bash -el {0}
         run: |
           conda install -y conda-build anaconda-client conda-verify
-          conda config --show-sources
-          conda config --show channels
-          conda info
-
-      # Check available packages to verify channel configuration
-      - name: Check if bayesian-optimization exists in available channels
-        shell: bash -el {0}
-        run: |
-          conda search bayesian-optimization
-          # Add conda-forge explicitly
-          conda config --add channels conda-forge
-          conda search bayesian-optimization
 
       - name: Extract package version
         run: |
@@ -219,42 +204,38 @@ jobs:
       - name: Build conda package
         shell: bash -el {0}
         run: |
-          mkdir -p conda-bld
-          # Print meta.yaml for debugging
-          echo "Contents of meta.yaml:"
-          cat conda-recipe/meta.yaml
-          # Build the package with conda-forge channel
-          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload --channel conda-forge
+          # Add conda-forge channel explicitly
+          conda config --add channels conda-forge
+          
+          # Build the package
+          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload
+          
+          # List all built packages for verification
+          echo "Built conda packages:"
+          find conda-bld -name "*.tar.bz2"
 
       - name: Upload conda build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: conda-package-distributions
-          path: conda-bld/
+          path: conda-bld/**/*.tar.bz2
+          if-no-files-found: error
           retention-days: 7
 
   publish-test-pypi:
     needs: build-pypi
-    # Run if either:
-    # - It's a push to main/master (but not a tag)
-    # - It's a manual workflow run with "staging" environment selected
     if: (github.event_name == 'push' && github.ref != 'refs/tags/v*' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     runs-on: ubuntu-latest
     environment:
       name: staging
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
 
-      # List the files for debugging
-      - name: List distribution files
-        run: ls -la dist/
-
-      # Set up Python and twine
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -265,44 +246,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install twine
           
-      # Check package with twine
       - name: Check distributions
         run: |
           twine check dist/*
           
-      # Publish to TestPyPI using trusted publishing
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          # Uncomment the following if you're not using trusted publishing
-          # user: ${{ secrets.TEST_PYPI_USERNAME }}
           verbose: true
-          skip-existing: true  # Skip if the version exists
+          skip-existing: true
 
   publish-pypi:
     needs: build-pypi
-    # Run if either:
-    # - It's a push with a tag starting with 'v'
-    # - It's a manual workflow run with "production" environment selected AND publish_targets is either "pypi" or "both"
     if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production' && (github.event.inputs.publish_targets == 'pypi' || github.event.inputs.publish_targets == 'both'))
     runs-on: ubuntu-latest
     environment:
       name: production
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
 
-      # List the files for debugging
-      - name: List distribution files
-        run: ls -la dist/
-
-      # Set up Python and twine
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -313,24 +282,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install twine
           
-      # Check package with twine
       - name: Check distributions
         run: |
           twine check dist/*
           
-      # Publish to PyPI using trusted publishing
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
-          # Uncomment the following if you're not using trusted publishing
-          # password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-conda:
     needs: build-conda
-    # Run if either:
-    # - It's a push with a tag starting with 'v'
-    # - It's a manual workflow run with "production" environment selected AND publish_targets is either "conda" or "both"
     if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production' && (github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'))
     runs-on: ubuntu-latest
     environment:
@@ -339,7 +302,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: conda-package-distributions
-          path: conda-bld/
+          path: conda-packages/
 
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v3
@@ -355,15 +318,50 @@ jobs:
         run: |
           conda install -y anaconda-client
 
-      - name: Upload to Anaconda.org
+      - name: Upload conda packages
         shell: bash -el {0}
         run: |
-          anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force conda-bld/*/*.tar.bz2
+          # List all packages to be uploaded
+          echo "Found the following conda packages:"
+          find conda-packages -name "*.tar.bz2"
+          
+          # Verify we have packages to upload
+          if [ -z "$(find conda-packages -name '*.tar.bz2')" ]; then
+            echo "::error::No conda packages found to upload"
+            exit 1
+          fi
+          
+          # Upload each package
+          for PACKAGE in $(find conda-packages -name "*.tar.bz2"); do
+            echo "Uploading $PACKAGE to Anaconda.org..."
+            anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force "$PACKAGE"
+          done
 
-  # Optional: Only if you want to publish to GitHub Pages in addition to ReadTheDocs
+  trigger-release:
+    needs: [publish-pypi, publish-conda]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract tag info
+        id: tag_info
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG_NAME#v}
+          echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_ENV
+      
+      - name: Trigger GitHub Release workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: create-github-release
+          client-payload: '{"tag": "${{ env.tag_name }}", "version": "${{ env.version }}"}'
+
   deploy-sphinx-docs:
     needs: [build-pypi]
-    # Only deploy docs for push events to main/master, tags, or manual workflow runs with production environment
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     runs-on: ubuntu-latest
     steps:
@@ -374,6 +372,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          
       - name: Install Pandoc (required for nbsphinx)
         run: sudo apt-get update && sudo apt-get install -y pandoc
 
@@ -389,7 +388,7 @@ jobs:
           cd docs
           make clean
           make html
-          touch _build/html/.nojekyll  # Prevent Jekyll processing on GitHub Pages
+          touch _build/html/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

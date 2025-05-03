@@ -152,6 +152,7 @@ jobs:
 
   build-conda:
     needs: test-conda
+    # Only run this job if we're pushing (any event) or if we manually trigger with conda or both as targets
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'
     runs-on: ubuntu-latest
     steps:
@@ -159,26 +160,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Locate conda-recipe directory
-        id: find-recipe
+      # First, check if conda-recipe is in the current location or .github/workflow
+      - name: Check conda-recipe location and copy if needed
         run: |
-          if [ -d "conda-recipe" ]; then
-            echo "recipe_dir=conda-recipe" >> $GITHUB_OUTPUT
-          elif [ -d ".github/workflow/conda-recipe" ]; then
-            echo "recipe_dir=.github/workflow/conda-recipe" >> $GITHUB_OUTPUT
+          if [ -d ".github/workflow/conda-recipe" ]; then
+            echo "Found conda-recipe in .github/workflow, copying to root..."
             mkdir -p conda-recipe
             cp -r .github/workflow/conda-recipe/* conda-recipe/
           elif [ -d ".github/workflows/conda-recipe" ]; then
-            echo "recipe_dir=.github/workflows/conda-recipe" >> $GITHUB_OUTPUT
+            echo "Found conda-recipe in .github/workflows, copying to root..."
             mkdir -p conda-recipe
             cp -r .github/workflows/conda-recipe/* conda-recipe/
-          else
-            echo "::error::No conda-recipe directory found"
+          fi
+          
+          if [ ! -d "conda-recipe" ]; then
+            echo "Error: conda-recipe directory not found"
             exit 1
           fi
           
           if [ ! -f "conda-recipe/meta.yaml" ]; then
-            echo "::error::conda-recipe/meta.yaml file not found"
+            echo "Error: conda-recipe/meta.yaml file not found"
             exit 1
           fi
 
@@ -191,10 +192,22 @@ jobs:
           auto-activate-base: false
           channels: conda-forge,defaults
 
-      - name: Install conda-build dependencies
+      - name: Install conda-build and debug dependencies
         shell: bash -el {0}
         run: |
           conda install -y conda-build anaconda-client conda-verify
+          conda config --show-sources
+          conda config --show channels
+          conda info
+
+      # Check available packages to verify channel configuration
+      - name: Check if bayesian-optimization exists in available channels
+        shell: bash -el {0}
+        run: |
+          conda search bayesian-optimization
+          # Add conda-forge explicitly
+          conda config --add channels conda-forge
+          conda search bayesian-optimization
 
       - name: Extract package version
         run: |
@@ -204,22 +217,18 @@ jobs:
       - name: Build conda package
         shell: bash -el {0}
         run: |
-          # Add conda-forge channel explicitly
-          conda config --add channels conda-forge
-          
-          # Build the package
-          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload
-          
-          # List all built packages for verification
-          echo "Built conda packages:"
-          find conda-bld -name "*.tar.bz2"
+          mkdir -p conda-bld
+          # Print meta.yaml for debugging
+          echo "Contents of meta.yaml:"
+          cat conda-recipe/meta.yaml
+          # Build the package with conda-forge channel
+          conda build conda-recipe --output-folder conda-bld --no-anaconda-upload --channel conda-forge
 
       - name: Upload conda build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: conda-package-distributions
-          path: conda-bld/**/*.tar.bz2
-          if-no-files-found: error
+          path: conda-bld/
           retention-days: 7
 
   publish-test-pypi:

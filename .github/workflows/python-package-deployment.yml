@@ -327,24 +327,33 @@ jobs:
         run: |
           conda install -y anaconda-client
 
+      - name: Debug conda files
+        shell: bash -el {0}
+        run: |
+          echo "Listing all files in conda-packages:"
+          find conda-packages -type f | sort
+          
       - name: Upload conda packages
         shell: bash -el {0}
         run: |
-          # List all packages to be uploaded
+          # Look for packages in all subdirectories
+          find conda-packages -name "*.tar.bz2" -o -name "*.conda" > conda_files.txt
+          
+          # Debug information
           echo "Found the following conda packages:"
-          find conda-packages -name "*.tar.bz2"
+          cat conda_files.txt
           
           # Verify we have packages to upload
-          if [ -z "$(find conda-packages -name '*.tar.bz2')" ]; then
+          if [ ! -s conda_files.txt ]; then
             echo "::error::No conda packages found to upload"
             exit 1
           fi
           
           # Upload each package
-          for PACKAGE in $(find conda-packages -name "*.tar.bz2"); do
+          while IFS= read -r PACKAGE; do
             echo "Uploading $PACKAGE to Anaconda.org..."
             anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload --force "$PACKAGE"
-          done
+          done < conda_files.txt
 
   trigger-release:
     needs: [publish-pypi, publish-conda]

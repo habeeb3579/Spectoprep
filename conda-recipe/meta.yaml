@@ -4,7 +4,7 @@
 
 package:
   name: {{ name|lower }}
-  version: {{ version }}
+  version: "1.0.0.alpha"
 
 source:
   path: ..  # Points to the repository root

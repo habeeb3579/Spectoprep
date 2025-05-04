@@ -1,4 +1,4 @@
-name: Create GitHub Release
+name: 🚀 Create GitHub Release
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
       - name: Sleep to ensure package builds complete
         run: |
           echo "Waiting for package builds to complete..."
-          sleep 60  # Simple approach - you might want something more sophisticated
+          sleep 800  # Sleep for 10 minutes
           
   # Generate CHANGELOG for this version
   update-changelog:

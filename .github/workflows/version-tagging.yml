@@ -100,7 +100,7 @@ jobs:
 
           # Check if conda-recipe/meta.yaml exists and update version there
           if [ -f "conda-recipe/meta.yaml" ]; then
-            sed -i "s/^  version: .*$/  version: \"$CONDA_VERSION\"/" conda-recipe/meta.yaml
+            sed -i "s/{% set version = \".*\" %}/{% set version = \"$CONDA_VERSION\" %}/" conda-recipe/meta.yaml
           fi
 
           echo "New version: $NEW_VERSION"

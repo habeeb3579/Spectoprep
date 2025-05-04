@@ -1,10 +1,10 @@
 {% set name = "spectoprep" %}
 {% set pypi_name = "spectoprep" %}
-{% set version = "0.1.0" %}   # This will be dynamically updated during CI/CD
+{% set version = "1.0.0.alpha" %}   # This will be dynamically updated during CI/CD
 
 package:
   name: {{ name|lower }}
-  version: "1.0.0.alpha"
+  version: {{ version }}
 
 source:
   path: ..  # Points to the repository root

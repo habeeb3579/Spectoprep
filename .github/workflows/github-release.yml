@@ -25,8 +25,14 @@ jobs:
         
       - name: Sleep for package builds
         run: |
-          echo "Waiting ${{ env.WAIT_MINUTES }} minutes for builds..."
-          sleep $(( ${{ env.WAIT_MINUTES }} * 60 ))
+          WAIT_TIME="${{ github.event.inputs.wait_time }}"
+          if ! [[ "$WAIT_TIME" =~ ^[0-9]+$ ]]; then
+            echo "Invalid wait_time input: $WAIT_TIME"
+            exit 1
+          fi
+          SECONDS_TO_SLEEP=$((WAIT_TIME * 60))
+          echo "Sleeping for $SECONDS_TO_SLEEP seconds..."
+          sleep "$SECONDS_TO_SLEEP"
           
   # Generate CHANGELOG for this version
   update-changelog:

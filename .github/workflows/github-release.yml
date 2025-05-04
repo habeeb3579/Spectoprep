@@ -1,9 +1,5 @@
 name: 🚀 Create GitHub Release
 
-env:
-  RUN_WAIT_FOR_BUILD: true   # Set to false to skip waiting
-  WAIT_MINUTES: 10           # Set wait time in minutes
-
 on:
   push:
     tags:
@@ -21,7 +17,7 @@ on:
 
 jobs:
   wait-for-builds:
-    if: ${{ env.RUN_WAIT_FOR_BUILD == 'true' && inputs.run_wait != 'false' }}
+    if: ${{ github.event.inputs.run_wait == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

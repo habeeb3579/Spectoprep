@@ -6,23 +6,36 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
+      release_tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: false
+        type: string
       run_wait:
         description: 'Run wait-for-builds job?'
         required: false
         default: 'true'
+        type: choice
+        options:
+          - true
+          - false
       wait_time:
         description: 'Wait time in minutes'
         required: false
         default: '10'
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
+
   wait-for-builds:
     if: ${{ github.event.inputs.run_wait == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Sleep for package builds
         run: |
           WAIT_TIME="${{ github.event.inputs.wait_time }}"
@@ -33,8 +46,7 @@ jobs:
           SECONDS_TO_SLEEP=$((WAIT_TIME * 60))
           echo "Sleeping for $SECONDS_TO_SLEEP seconds..."
           sleep "$SECONDS_TO_SLEEP"
-          
-  # Generate CHANGELOG for this version
+
   update-changelog:
     runs-on: ubuntu-latest
     steps:
@@ -43,224 +55,110 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install gitpython pyyaml
-        
-      - name: Extract version from tag
+
+      - name: Extract version from ref
         id: get_version
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.release_tag }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+
+          if [ -z "$VERSION" ]; then
+            echo "::error::No version found. Cannot proceed."
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Generate CHANGELOG
-        id: changelog
         run: |
           CHANGELOG_FILE="CHANGELOG.md"
           TEMP_CHANGELOG="temp_changelog.md"
-          
-          # Create empty file if it doesn't exist
+
           if [ ! -f "$CHANGELOG_FILE" ]; then
             echo "# Changelog" > "$CHANGELOG_FILE"
             echo "" >> "$CHANGELOG_FILE"
-            echo "All notable changes to this project will be documented in this file." >> "$CHANGELOG_FILE"
+            echo "All notable changes to this project will be documented here." >> "$CHANGELOG_FILE"
             echo "" >> "$CHANGELOG_FILE"
           fi
-          
-          # Get the previous tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 ${{ env.TAG }}^ 2>/dev/null || echo "")
-          
-          # If no previous tag exists, get all commits
+
+          LATEST_TAG=$(git describe --tags --abbrev=0 "${{ env.VERSION }}"^ 2>/dev/null || echo "")
+
           if [ -z "$LATEST_TAG" ]; then
-            echo "No previous tag found. Including all commits."
-            # Get commits since repository creation
             COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse)
           else
-            echo "Previous tag found: $LATEST_TAG"
-            # Get commits between the last tag and this tag
-            COMMITS=$(git log $LATEST_TAG..${{ env.TAG }} --pretty=format:"* %s (%h)" --reverse)
+            COMMITS=$(git log "$LATEST_TAG"..${{ env.VERSION }} --pretty=format:"* %s (%h)" --reverse)
           fi
-          
+
           if [ -z "$COMMITS" ]; then
-            echo "No new commits found since $LATEST_TAG"
+            echo "::notice::No new commits found. Skipping CHANGELOG update."
             exit 0
           fi
-          
-          # Check if version section already exists in CHANGELOG
-          VERSION_EXISTS=$(grep -c "## \[${{ env.VERSION }}\]" "$CHANGELOG_FILE" || echo "0")
-          if [ "$VERSION_EXISTS" != "0" ]; then
-            echo "Version ${{ env.VERSION }} already exists in CHANGELOG. Not modifying."
-            exit 0
-          fi
-          
-          # Create CHANGELOG header for new version
+
           echo "# Changelog" > "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
-          echo "All notable changes to this project will be documented in this file." >> "$TEMP_CHANGELOG"
+          echo "All notable changes to this project will be documented here." >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
-          
-          # Add new version section
           echo "## [${{ env.VERSION }}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
-          
-          # Categorize commits by conventional commit types
-          FEATURES=$(echo "$COMMITS" | grep -i "feat" || echo "")
-          FIXES=$(echo "$COMMITS" | grep -i "fix" || echo "")
-          DOCS=$(echo "$COMMITS" | grep -i "doc" || echo "")
-          TESTS=$(echo "$COMMITS" | grep -i "test" || echo "")
-          REFACTOR=$(echo "$COMMITS" | grep -i "refactor" || echo "")
-          CHORE=$(echo "$COMMITS" | grep -i "chore" || echo "")
-          OTHER=$(echo "$COMMITS" | grep -v -i "feat\|fix\|doc\|test\|refactor\|chore" || echo "")
-          
-          # Add features
-          if [ ! -z "$FEATURES" ]; then
-            echo "### Features" >> "$TEMP_CHANGELOG"
-            echo "$FEATURES" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Add fixes
-          if [ ! -z "$FIXES" ]; then
-            echo "### Bug Fixes" >> "$TEMP_CHANGELOG"
-            echo "$FIXES" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Add docs
-          if [ ! -z "$DOCS" ]; then
-            echo "### Documentation" >> "$TEMP_CHANGELOG"
-            echo "$DOCS" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Add tests
-          if [ ! -z "$TESTS" ]; then
-            echo "### Tests" >> "$TEMP_CHANGELOG"
-            echo "$TESTS" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Add refactoring
-          if [ ! -z "$REFACTOR" ]; then
-            echo "### Refactoring" >> "$TEMP_CHANGELOG"
-            echo "$REFACTOR" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Add chore
-          if [ ! -z "$CHORE" ]; then
-            echo "### Chore" >> "$TEMP_CHANGELOG"
-            echo "$CHORE" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Add other changes
-          if [ ! -z "$OTHER" ]; then
-            echo "### Other Changes" >> "$TEMP_CHANGELOG"
-            echo "$OTHER" >> "$TEMP_CHANGELOG"
-            echo "" >> "$TEMP_CHANGELOG"
-          fi
-          
-          # Append existing changelog content (excluding header)
+          echo "$COMMITS" >> "$TEMP_CHANGELOG"
+
           tail -n +4 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
-          
-          # Replace the old changelog
           mv "$TEMP_CHANGELOG" "$CHANGELOG_FILE"
-          
-          # Set changelog content for use in release notes
-          CHANGELOG_CONTENT=$(cat "$CHANGELOG_FILE" | head -n 20)
-          echo "changelog<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG_CONTENT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          
-          echo "::set-output name=file::$CHANGELOG_FILE"
 
       - name: Commit and push CHANGELOG
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
           git add CHANGELOG.md
           git commit -m "docs: update CHANGELOG for version ${{ env.VERSION }}" || echo "No changes to commit"
           git push
 
-  # Create the GitHub release with artifacts
   create-release:
     needs: [wait-for-builds, update-changelog]
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Use ref to get the updated CHANGELOG
-          ref: ${{ github.ref }}
-      
-      - name: Extract version from tag
-        id: get_version
+
+      - name: Resolve version and tag
+        id: resolve_tag
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      
-      - name: Get Changelog Entry
-        id: changelog_reader
-        run: |
-          CHANGELOG_FILE="CHANGELOG.md"
-          
-          # Pull latest changes to get updated CHANGELOG
-          git pull
-          
-          if [ ! -f "$CHANGELOG_FILE" ]; then
-            echo "CHANGELOG file not found. Creating release notes from git commits."
-            LATEST_TAG=$(git describe --tags --abbrev=0 ${{ env.TAG }}^ 2>/dev/null || echo "")
-            if [ -z "$LATEST_TAG" ]; then
-              # If this is the first tag, get all commits
-              COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse)
-            else
-              # Get commits between the last tag and this tag
-              COMMITS=$(git log $LATEST_TAG..${{ env.TAG }} --pretty=format:"* %s (%h)" --reverse)
-            fi
-            # Create release notes
-            RELEASE_NOTES="## Changes in ${{ env.VERSION }}\n\n"
-            RELEASE_NOTES+="$COMMITS"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ github.event.inputs.release_tag }}"
           else
-            # Extract current version section from CHANGELOG
-            SECTION_HEADER="## \[${{ env.VERSION }}\]"
-            NEXT_SECTION_PATTERN="## \["
-            CHANGELOG_CONTENT=$(cat "$CHANGELOG_FILE")
-            # Find start of current version section
-            SECTION_START=$(echo "$CHANGELOG_CONTENT" | grep -n "$SECTION_HEADER" | cut -d: -f1)
-            if [ -z "$SECTION_START" ]; then
-              echo "Version ${{ env.VERSION }} not found in CHANGELOG. Using tag message."
-              RELEASE_NOTES="Release of version ${{ env.VERSION }}"
-            else
-              # Find start of next version section
-              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 1 | cut -d: -f1)
-              if [ -z "$NEXT_SECTION_START" ]; then
-                # If no next section, take everything after current section start
-                RELEASE_NOTES=$(tail -n +$SECTION_START "$CHANGELOG_FILE")
-              else
-                # Calculate end of current section
-                SECTION_END=$((SECTION_START + NEXT_SECTION_START - 1))
-                RELEASE_NOTES=$(sed -n "${SECTION_START},${SECTION_END}p" "$CHANGELOG_FILE")
-              fi
-            fi
+            TAG="${GITHUB_REF#refs/tags/}"
           fi
-          
-          # Escape multiline string for GitHub Actions
-          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
-          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
-          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
-          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
-      
+
+          if [ -z "$TAG" ]; then
+            echo "::error::No tag found. Exiting."
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+
+          echo "Resolved TAG: $TAG"
+          echo "Resolved VERSION: $VERSION"
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Download PyPI artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -268,7 +166,7 @@ jobs:
           name: python-package-distributions
           path: dist/
           if_no_artifact_found: warn
-          
+
       - name: Download Conda artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -276,32 +174,60 @@ jobs:
           name: conda-package-distributions
           path: conda-dist/
           if_no_artifact_found: warn
-      
+
       - name: Prepare release files
         run: |
-          # Create release directory
           mkdir -p release-files
-          
-          # Copy PyPI distribution files if they exist
+
           if [ -d "dist" ] && [ "$(ls -A dist 2>/dev/null)" ]; then
             cp -r dist/* release-files/
           fi
-          
-          # Copy Conda distribution files if they exist
+
           if [ -d "conda-dist" ] && [ "$(ls -A conda-dist 2>/dev/null)" ]; then
             find conda-dist -name "*.tar.bz2" -o -name "*.conda" -exec cp {} release-files/ \;
           fi
-          
-          # Copy additional files
+
           [ -f "LICENSE" ] && cp LICENSE release-files/
           [ -f "README.md" ] && cp README.md release-files/
-      
-      - name: Create Release
+
+      - name: Generate Release Notes
+        run: |
+          CHANGELOG_FILE="CHANGELOG.md"
+
+          if [ ! -f "$CHANGELOG_FILE" ]; then
+            echo "::warning::CHANGELOG not found. Using simple notes."
+            RELEASE_NOTES="Release ${{ env.VERSION }}"
+          else
+            SECTION_HEADER="## \[${{ env.VERSION }}\]"
+            NEXT_SECTION_PATTERN="## \["
+
+            SECTION_START=$(grep -n "$SECTION_HEADER" "$CHANGELOG_FILE" | cut -d: -f1 || echo "")
+            if [ -z "$SECTION_START" ]; then
+              RELEASE_NOTES="Release ${{ env.VERSION }}"
+            else
+              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 1 | cut -d: -f1 || echo "")
+              if [ -z "$NEXT_SECTION_START" ]; then
+                RELEASE_NOTES=$(tail -n +$SECTION_START "$CHANGELOG_FILE")
+              else
+                SECTION_END=$((SECTION_START + NEXT_SECTION_START - 2))
+                RELEASE_NOTES=$(sed -n "${SECTION_START},${SECTION_END}p" "$CHANGELOG_FILE")
+              fi
+            fi
+          fi
+
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+
+          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ env.VERSION }}
+          name: "Release ${{ env.VERSION }}"
+          tag_name: "v${{ env.VERSION }}"
           body: ${{ env.RELEASE_NOTES }}
           draft: false
-          prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
+          prerelease: ${{ contains(env.TAG, '-alpha') || contains(env.TAG, '-beta') || contains(env.TAG, '-rc') }}
           files: |
             release-files/*

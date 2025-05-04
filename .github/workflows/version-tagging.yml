@@ -23,6 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      new_version: ${{ steps.bump_version.outputs.new_version }}
+      tag_name: ${{ steps.bump_version.outputs.tag_name }}
+      current_version: ${{ steps.get_version.outputs.current_version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,116 +45,76 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install bump2version
-          
+
       - name: Get current version
-        id: current_version
+        id: get_version
         run: |
-          if [ -f "setup.py" ]; then
-            CURRENT_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" setup.py || python setup.py --version)
-          elif [ -f "pyproject.toml" ]; then
-            CURRENT_VERSION=$(grep -oP "version = ['\"]\\K[^'\"]*" pyproject.toml)
-          elif [ -f "__init__.py" ]; then
-            CURRENT_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" __init__.py)
-          else
-            echo "No version file found"
-            exit 1
-          fi
-          
+          CURRENT_VERSION=$(grep -oP "__version__ = ['\"]\K[^'\"]+" spectoprep/__init__.py)
           echo "Current version: $CURRENT_VERSION"
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_ENV
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          
+
       - name: Bump version
         id: bump_version
+        env:
+          CURRENT_VERSION: ${{ steps.get_version.outputs.current_version }}
         run: |
           VERSION_TYPE="${{ github.event.inputs.version_type }}"
           PRERELEASE="${{ github.event.inputs.prerelease }}"
-          
-          # If bump2version configuration exists, use it
-          if [ -f ".bumpversion.cfg" ] || [ -f "setup.cfg" ]; then
-            if [ -z "$PRERELEASE" ]; then
-              bump2version $VERSION_TYPE
-            else
-              bump2version --new-version ${CURRENT_VERSION}-${PRERELEASE} $VERSION_TYPE
-            fi
+
+          # Split version into components
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]:-0}
+          MINOR=${VERSION_PARTS[1]:-0}
+          PATCH=${VERSION_PARTS[2]:-0}
+
+          # Increment version according to type
+          if [ "$VERSION_TYPE" == "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$VERSION_TYPE" == "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
           else
-            # Split version into components
-            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-            MAJOR=${VERSION_PARTS[0]:-0}
-            MINOR=${VERSION_PARTS[1]:-0}
-            PATCH=${VERSION_PARTS[2]:-0}
-            
-            # Increment version according to type
-            if [ "$VERSION_TYPE" == "major" ]; then
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-            elif [ "$VERSION_TYPE" == "minor" ]; then
-              MINOR=$((MINOR + 1))
-              PATCH=0
-            else
-              PATCH=$((PATCH + 1))
-            fi
-            
-            # Construct new version
-            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-            if [ ! -z "$PRERELEASE" ]; then
-              NEW_VERSION="${NEW_VERSION}-${PRERELEASE}"
-            fi
-            
-            # Update version in files
-            if [ -f "setup.py" ]; then
-              sed -i "s/__version__ = [\"'][^\"']*[\"']/__version__ = \"$NEW_VERSION\"/" setup.py
-            fi
-            
-            if [ -f "pyproject.toml" ]; then
-              sed -i "s/version = [\"'][^\"']*[\"']/version = \"$NEW_VERSION\"/" pyproject.toml
-            fi
-            
-            if [ -f "__init__.py" ]; then
-              sed -i "s/__version__ = [\"'][^\"']*[\"']/__version__ = \"$NEW_VERSION\"/" __init__.py
-            fi
+            PATCH=$((PATCH + 1))
           fi
-          
-          # Get the new version after bump
-          if [ -f "setup.py" ]; then
-            NEW_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" setup.py || python setup.py --version)
-          elif [ -f "pyproject.toml" ]; then
-            NEW_VERSION=$(grep -oP "version = ['\"]\\K[^'\"]*" pyproject.toml)
-          elif [ -f "__init__.py" ]; then
-            NEW_VERSION=$(grep -oP "__version__ = ['\"]\\K[^'\"]*" __init__.py)
-          else
-            echo "No version file found"
-            exit 1
+
+          # Construct new version
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          if [ ! -z "$PRERELEASE" ]; then
+            NEW_VERSION="${NEW_VERSION}-${PRERELEASE}"
           fi
-          
+
+          # Update version in files
+          sed -i "s/__version__ = ['\"][^'\"]*['\"]/__version__ = \"$NEW_VERSION\"/" spectoprep/__init__.py
+          sed -i "s/version = ['\"][^'\"]*['\"]/version = \"$NEW_VERSION\"/" pyproject.toml
+
           echo "New version: $NEW_VERSION"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-          # Determine tag name
+
           TAG_NAME="v$NEW_VERSION"
-          echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-      
-      - name: Trigger CHANGELOG workflow
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: generate-changelog
-          client-payload: '{"version": "${{ env.new_version }}"}'
-            
+
+      - name: Commit and push version bump
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout -b version-bump-${{ steps.bump_version.outputs.new_version }}
+          git add spectoprep/__init__.py pyproject.toml
+          git commit -m "chore: bump version to ${{ steps.bump_version.outputs.new_version }}"
+          git push origin version-bump-${{ steps.bump_version.outputs.new_version }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: bump version to ${{ env.new_version }}"
-          title: "Version bump to ${{ env.new_version }}"
+          commit-message: "chore: bump version to ${{ steps.bump_version.outputs.new_version }}"
+          title: "Version bump to ${{ steps.bump_version.outputs.new_version }}"
           body: |
-            This PR bumps the version from ${{ env.current_version }} to ${{ env.new_version }}.
-            
+            This PR bumps the version from ${{ steps.get_version.outputs.current_version }} to ${{ steps.bump_version.outputs.new_version }}.
+
             Once merged, a tag will be created and a release will be published.
-          branch: version-bump-${{ env.new_version }}
+          branch: version-bump-${{ steps.bump_version.outputs.new_version }}
           base: ${{ github.event.repository.default_branch }}
           labels: version-bump
 

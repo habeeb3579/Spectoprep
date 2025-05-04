@@ -13,6 +13,7 @@ on:
 
 jobs:
   generate-changelog:
+    # Only run this workflow when manually triggered or when a PR is merged (and not labeled with 'no-changelog')
     if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && !contains(github.event.pull_request.labels.*.name, 'no-changelog'))
     runs-on: ubuntu-latest
     permissions:
@@ -46,6 +47,8 @@ jobs:
             PR_TITLE="${{ github.event.pull_request.title }}"
             if [[ "$PR_TITLE" =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
               VERSION=${BASH_REMATCH[0]}
+              # Remove 'v' prefix if present
+              VERSION=${VERSION#v}
             elif [[ "$PR_TITLE" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
               VERSION=${BASH_REMATCH[0]}
             else
@@ -70,34 +73,95 @@ jobs:
             echo "" >> "$CHANGELOG_FILE"
           fi
           
-          # Get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
-          # If no tag exists, get all commits
-          if [ -z "$LATEST_TAG" ]; then
-            echo "No previous tag found. Including all commits."
-            # Get commits since repository creation
-            COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse)
-          else
-            echo "Previous tag found: $LATEST_TAG"
-            # Get commits since last tag
-            COMMITS=$(git log $LATEST_TAG..HEAD --pretty=format:"* %s (%h)" --reverse)
+          # Check if version already exists in CHANGELOG
+          VERSION_EXISTS=$(grep -c "## \[${{ env.VERSION }}\]" "$CHANGELOG_FILE" || echo "0")
+          if [ "$VERSION_EXISTS" != "0" ]; then
+            echo "Version ${{ env.VERSION }} already exists in CHANGELOG. Will update it."
           fi
           
-          if [ -z "$COMMITS" ]; then
-            echo "No new commits found since $LATEST_TAG"
+          # Get the latest tag or commit before this PR
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For PRs, get commits in the PR
+            COMMITS=$(git log ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} --pretty=format:"* %s (%h)" --reverse)
+          elif [ "$VERSION_EXISTS" == "0" ]; then
+            # For new versions via workflow_dispatch, get commits since latest tag
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            
+            if [ -z "$LATEST_TAG" ]; then
+              echo "No previous tag found. Including all commits."
+              # Get commits since repository creation
+              COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse)
+            else
+              echo "Previous tag found: $LATEST_TAG"
+              # Get commits since last tag
+              COMMITS=$(git log $LATEST_TAG..HEAD --pretty=format:"* %s (%h)" --reverse)
+            fi
+          else
+            # If updating an existing version, keep existing content
+            echo "Will update existing version section without changing commits."
+            COMMITS=""
+          fi
+          
+          if [ -z "$COMMITS" ] && [ "$VERSION_EXISTS" == "0" ]; then
+            echo "No new commits found since last tag and no existing version to update."
             exit 0
           fi
           
-          # Create CHANGELOG header for new version
+          # Create CHANGELOG header for temp file
           echo "# Changelog" > "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
           echo "All notable changes to this project will be documented in this file." >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
           
-          # Add new version section
-          echo "## [${VERSION}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
-          echo "" >> "$TEMP_CHANGELOG"
+          # Handle the case where version already exists
+          if [ "$VERSION_EXISTS" != "0" ]; then
+            # Read the existing CHANGELOG and replace the temp file with everything up to the version header
+            SECTION_HEADER="## \[${{ env.VERSION }}\]"
+            CHANGELOG_CONTENT=$(cat "$CHANGELOG_FILE")
+            
+            # Find line number of the version header
+            SECTION_START=$(echo "$CHANGELOG_CONTENT" | grep -n "$SECTION_HEADER" | cut -d: -f1)
+            
+            # Copy everything before the version section to temp file
+            if [ ! -z "$SECTION_START" ]; then
+              BEFORE_SECTION=$((SECTION_START - 1))
+              head -n $BEFORE_SECTION "$CHANGELOG_FILE" > "$TEMP_CHANGELOG"
+            fi
+            
+            # Add version section header
+            echo "## [${{ env.VERSION }}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+            
+            # For manually triggered updates with empty commits, copy existing section content
+            if [ -z "$COMMITS" ]; then
+              # Find next section to determine where current section ends
+              NEXT_SECTION_PATTERN="## \["
+              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 2 | tail -n 1 | cut -d: -f1)
+              
+              if [ -z "$NEXT_SECTION_START" ]; then
+                # If no next section, skip copying section content and continue with the rest of the file below
+                echo "No next section found. Will regenerate this section."
+              else
+                # Calculate end of current section
+                SECTION_END=$((SECTION_START + NEXT_SECTION_START - 2))
+                # Copy section content without header
+                sed -n "$((SECTION_START + 2)),$SECTION_END p" "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+                echo "" >> "$TEMP_CHANGELOG"
+                
+                # Copy the rest of the changelog starting from next section
+                tail -n +$((SECTION_END + 1)) "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+                
+                # Move temp file to changelog and exit
+                mv "$TEMP_CHANGELOG" "$CHANGELOG_FILE"
+                echo "::set-output name=file::$CHANGELOG_FILE"
+                exit 0
+              fi
+            fi
+          else
+            # Add new version section header
+            echo "## [${{ env.VERSION }}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+          fi
           
           # Categorize commits by conventional commit types
           FEATURES=$(echo "$COMMITS" | grep -i "feat" || echo "")
@@ -157,8 +221,24 @@ jobs:
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
-          # Append existing changelog content (excluding header)
-          tail -n +4 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+          # If we're updating an existing version, copy content after this version section
+          if [ "$VERSION_EXISTS" != "0" ]; then
+            # Find next section to determine where to continue copying
+            NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "## \[" | head -n 2 | tail -n 1 | cut -d: -f1)
+            
+            if [ -z "$NEXT_SECTION_START" ]; then
+              # If no next section, we're done
+              echo "No next section found. Updated CHANGELOG."
+            else
+              # Calculate where next section begins in original file
+              NEXT_START=$((SECTION_START + NEXT_SECTION_START - 1))
+              # Copy everything after the current section
+              tail -n +$NEXT_START "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+            fi
+          else
+            # For new versions, append existing changelog content (excluding header)
+            tail -n +4 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+          fi
           
           # Replace the old changelog
           mv "$TEMP_CHANGELOG" "$CHANGELOG_FILE"

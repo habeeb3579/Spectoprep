@@ -7,10 +7,7 @@ permissions:
 
 on:
   push:
-    branches: [main, master]
-    tags: ['v*']
-  pull_request:
-    branches: [main, master]
+    tags: ['v*']  # Only run when a tag is pushed, not on every PR
   workflow_dispatch:
     inputs:
       environment:
@@ -152,8 +149,8 @@ jobs:
 
   build-conda:
     needs: test-conda
-    # Only run this job if we're pushing (any event) or if we manually trigger with conda or both as targets
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'
+    # Only run this job if we're pushing a tag or if we manually trigger with conda or both as targets
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.publish_targets == 'conda' || github.event.inputs.publish_targets == 'both'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -200,6 +197,25 @@ jobs:
           conda config --show channels
           conda info
 
+      # Make sure version is conda-compatible
+      - name: Ensure conda-compatible version
+        shell: bash -el {0}
+        run: |
+          # Extract version from meta.yaml
+          VERSION=$(grep -oP '^  version: ["\x27]\K[^"\x27]+' conda-recipe/meta.yaml)
+          echo "Current version in meta.yaml: $VERSION"
+          
+          # Check if version contains hyphen and replace with dot if necessary
+          if [[ "$VERSION" == *-* ]]; then
+            CONDA_VERSION=$(echo $VERSION | sed 's/-/./g')
+            echo "Converting version from $VERSION to $CONDA_VERSION for conda compatibility"
+            sed -i "s/^  version: .*/  version: \"$CONDA_VERSION\"/" conda-recipe/meta.yaml
+          fi
+          
+          # Print the updated version for verification
+          UPDATED_VERSION=$(grep -oP '^  version: ["\x27]\K[^"\x27]+' conda-recipe/meta.yaml)
+          echo "Updated version in meta.yaml: $UPDATED_VERSION"
+
       # Check available packages to verify channel configuration
       - name: Check if bayesian-optimization exists in available channels
         shell: bash -el {0}
@@ -233,7 +249,7 @@ jobs:
 
   publish-test-pypi:
     needs: build-pypi
-    if: (github.event_name == 'push' && github.ref != 'refs/tags/v*' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -357,7 +373,7 @@ jobs:
 
   deploy-sphinx-docs:
     needs: [build-pypi]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

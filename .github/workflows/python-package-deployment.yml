@@ -189,6 +189,12 @@ jobs:
           auto-activate-base: false
           channels: conda-forge,defaults
 
+      - name: Extract package version
+        run: |
+          .github/scripts/extract_version.sh
+        shell: bash
+        
+            
       - name: Install conda-build and debug dependencies
         shell: bash -el {0}
         run: |
@@ -239,11 +245,6 @@ jobs:
           # Add conda-forge explicitly
           conda config --add channels conda-forge
           conda search bayesian-optimization
-
-      - name: Extract package version
-        run: |
-          .github/scripts/extract_version.sh
-        shell: bash
         
       - name: Build conda package
         shell: bash -el {0}

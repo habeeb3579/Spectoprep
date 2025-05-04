@@ -1,23 +1,36 @@
 name: 🚀 Create GitHub Release
 
+env:
+  RUN_WAIT_FOR_BUILD: true   # Set to false to skip waiting
+  WAIT_MINUTES: 10           # Set wait time in minutes
+
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      run_wait:
+        description: 'Run wait-for-builds job?'
+        required: false
+        default: 'true'
+      wait_time:
+        description: 'Wait time in minutes'
+        required: false
+        default: '10'
 
 jobs:
-  # Wait for package build jobs to complete
   wait-for-builds:
+    if: ${{ env.RUN_WAIT_FOR_BUILD == 'true' && inputs.run_wait != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Sleep to ensure package builds complete
+      - name: Sleep for package builds
         run: |
-          echo "Waiting for package builds to complete..."
-          sleep 800  # Sleep for 10 minutes
+          echo "Waiting ${{ env.WAIT_MINUTES }} minutes for builds..."
+          sleep $(( ${{ env.WAIT_MINUTES }} * 60 ))
           
   # Generate CHANGELOG for this version
   update-changelog:

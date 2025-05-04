@@ -177,18 +177,48 @@ jobs:
 
       - name: Prepare release files
         run: |
+          echo "Preparing release files..."
+          
           mkdir -p release-files
 
+          # Copy PyPI distribution files if they exist
           if [ -d "dist" ] && [ "$(ls -A dist 2>/dev/null)" ]; then
+            echo "Copying PyPI distribution files..."
             cp -r dist/* release-files/
+          else
+            echo "No PyPI artifacts found to copy."
           fi
 
+          # Copy Conda distribution files if they exist
           if [ -d "conda-dist" ] && [ "$(ls -A conda-dist 2>/dev/null)" ]; then
+            echo "Copying Conda distribution files..."
             find conda-dist -name "*.tar.bz2" -o -name "*.conda" -exec cp {} release-files/ \;
+          else
+            echo "No Conda artifacts found to copy."
           fi
 
-          [ -f "LICENSE" ] && cp LICENSE release-files/
-          [ -f "README.md" ] && cp README.md release-files/
+          # Copy LICENSE file if it exists
+          if [ -f "LICENSE" ]; then
+            echo "Copying LICENSE..."
+            cp LICENSE release-files/
+          else
+            echo "LICENSE file not found. Skipping."
+          fi
+
+          # Copy README.md or README.rst if available
+          if [ -f "README.md" ]; then
+            echo "Copying README.md..."
+            cp README.md release-files/
+          elif [ -f "README.rst" ]; then
+            echo "Copying README.rst..."
+            cp README.rst release-files/
+          else
+            echo "No README.md or README.rst file found. Skipping."
+          fi
+
+          echo "Release files prepared successfully."
+
+
 
       - name: Generate Release Notes
         run: |

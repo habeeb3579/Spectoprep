@@ -201,20 +201,34 @@ jobs:
       - name: Ensure conda-compatible version
         shell: bash -el {0}
         run: |
-          # Extract version from Jinja set statement
-          VERSION=$(grep -oP '{% set version = "\\K[^"]+' conda-recipe/meta.yaml)
+          # Extract the current version from meta.yaml
+          VERSION=$(grep -oP '{% set version = "\K[^"]+' conda-recipe/meta.yaml || true)
+          
+          if [ -z "$VERSION" ]; then
+            echo "::error::Version not found in conda-recipe/meta.yaml"
+            exit 1
+          fi
+
           echo "Current version in meta.yaml: $VERSION"
           
-          # Check if version contains hyphen and replace with dot if necessary
-          if [[ "$VERSION" == *-* ]]; then
-            CONDA_VERSION=$(echo $VERSION | sed 's/-/./g')
-            echo "Converting version from $VERSION to $CONDA_VERSION for conda compatibility"
+          # Normalize to conda-compatible version if necessary
+          CONDA_VERSION="$VERSION"
+          CONDA_VERSION="${CONDA_VERSION/-alpha/a0}"
+          CONDA_VERSION="${CONDA_VERSION/-beta/b0}"
+          CONDA_VERSION="${CONDA_VERSION/-rc/rc0}"
+
+          if [[ "$CONDA_VERSION" != "$VERSION" ]]; then
+            echo "Converting version from $VERSION to $CONDA_VERSION for conda compatibility..."
+            # Update the version inside meta.yaml
             sed -i "s/{% set version = \".*\" %}/{% set version = \"$CONDA_VERSION\" %}/" conda-recipe/meta.yaml
+          else
+            echo "Version is already conda-compatible. No changes needed."
           fi
-          
+
           # Print the updated version for verification
-          UPDATED_VERSION=$(grep -oP '{% set version = "\\K[^"]+' conda-recipe/meta.yaml)
+          UPDATED_VERSION=$(grep -oP '{% set version = "\K[^"]+' conda-recipe/meta.yaml)
           echo "Updated version in meta.yaml: $UPDATED_VERSION"
+
 
 
       # Check available packages to verify channel configuration

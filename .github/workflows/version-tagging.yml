@@ -23,10 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     outputs:
       new_version: ${{ steps.bump_version.outputs.new_version }}
       tag_name: ${{ steps.bump_version.outputs.tag_name }}
       current_version: ${{ steps.get_version.outputs.current_version }}
+      pr_number: ${{ steps.create_pr.outputs.pull-request-number }}
 
     steps:
       - name: Checkout code
@@ -90,16 +92,13 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      - name: Commit and push version bump
+      - name: Configure Git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git checkout -b version-bump-${{ steps.bump_version.outputs.new_version }}
-          git add src/spectoprep/__init__.py pyproject.toml
-          git commit -m "chore: bump version to ${{ steps.bump_version.outputs.new_version }}"
-          git push origin version-bump-${{ steps.bump_version.outputs.new_version }}
-
+          
       - name: Create Pull Request
+        id: create_pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -107,10 +106,19 @@ jobs:
           title: "Version bump to ${{ steps.bump_version.outputs.new_version }}"
           body: |
             This PR bumps the version from ${{ steps.get_version.outputs.current_version }} to ${{ steps.bump_version.outputs.new_version }}.
-            
+
             Once merged, a tag will be created and a release will be published.
+            
+            **IMPORTANT:** Please review and merge this PR manually. Do not use auto-merge.
           branch: version-bump-${{ steps.bump_version.outputs.new_version }}
           base: ${{ github.event.repository.default_branch }}
           labels: version-bump
+          draft: false
+          # Important: Don't auto-merge!
+          delete-branch: false
 
-# The create-tag job has been removed
+      - name: Output PR Details
+        if: steps.create_pr.outputs.pull-request-number
+        run: |
+          echo "Created PR #${{ steps.create_pr.outputs.pull-request-number }}"
+          echo "PR URL: ${{ steps.create_pr.outputs.pull-request-url }}"

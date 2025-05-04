@@ -7,6 +7,13 @@ SpectroPrep
 .. image:: https://img.shields.io/travis/habeeb3579/spectoprep.svg
     :target: https://travis-ci.com/habeeb3579/spectoprep
 
+.. image:: https://codecov.io/gh/habeeb3579/Spectoprep/graph/badge.svg?token=5EPSYE77K7 
+    :target: https://codecov.io/gh/habeeb3579/Spectoprep
+
+.. image:: https://anaconda.org/habeebest/spectoprep/badges/version.svg
+    :target: https://anaconda.org/habeebest/spectoprep
+
+
 .. image:: https://readthedocs.org/projects/spectoprep/badge/?version=latest
     :target: https://spectoprep.readthedocs.io/en/latest/?version=latest
     :alt: Documentation Status

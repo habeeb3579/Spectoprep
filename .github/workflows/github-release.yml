@@ -71,6 +71,8 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             VERSION="${{ github.event.inputs.release_tag }}"
+            # Remove 'v' prefix if present
+            VERSION=${VERSION#v}
           else
             VERSION="${GITHUB_REF#refs/tags/v}"
           fi
@@ -82,47 +84,98 @@ jobs:
 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Generate CHANGELOG
+      - name: Check if version already exists in CHANGELOG
+        id: check_version
         run: |
-          CHANGELOG_FILE="CHANGELOG.md"
-          TEMP_CHANGELOG="temp_changelog.md"
+          CHANGELOG_FILE="CHANGELOG.rst"
+          
+          if [ ! -f "$CHANGELOG_FILE" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if this version already exists in the changelog
+          if grep -q "^${{ env.VERSION }} - " "$CHANGELOG_FILE"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate CHANGELOG
+        if: steps.check_version.outputs.exists == 'false'
+        run: |
+          CHANGELOG_FILE="CHANGELOG.rst"
+          TEMP_CHANGELOG="temp_changelog.rst"
 
           if [ ! -f "$CHANGELOG_FILE" ]; then
-            echo "# Changelog" > "$CHANGELOG_FILE"
+            echo "Changelog" > "$CHANGELOG_FILE"
+            echo "=========" >> "$CHANGELOG_FILE"
             echo "" >> "$CHANGELOG_FILE"
             echo "All notable changes to this project will be documented here." >> "$CHANGELOG_FILE"
             echo "" >> "$CHANGELOG_FILE"
           fi
 
-          LATEST_TAG=$(git describe --tags --abbrev=0 "${{ env.VERSION }}"^ 2>/dev/null || echo "")
+          LATEST_TAG=$(git describe --tags --abbrev=0 "v${{ env.VERSION }}"^ 2>/dev/null || echo "")
 
           if [ -z "$LATEST_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse)
+            COMMITS=$(git log --pretty=format:"* %s (%h)" --reverse | head -n 15)
           else
-            COMMITS=$(git log "$LATEST_TAG"..${{ env.VERSION }} --pretty=format:"* %s (%h)" --reverse)
+            COMMITS=$(git log "$LATEST_TAG"..v${{ env.VERSION }} --pretty=format:"* %s (%h)" --reverse | head -n 15)
           fi
 
           if [ -z "$COMMITS" ]; then
-            echo "::notice::No new commits found. Skipping CHANGELOG update."
-            exit 0
+            echo "::notice::No new commits found. Using placeholder for CHANGELOG."
+            COMMITS="* Released version ${{ env.VERSION }}"
           fi
 
-          echo "# Changelog" > "$TEMP_CHANGELOG"
+          echo "Changelog" > "$TEMP_CHANGELOG"
+          echo "=========" >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
           echo "All notable changes to this project will be documented here." >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
-          echo "## [${{ env.VERSION }}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+          
+          # Add version section header (RST format)
+          echo "${{ env.VERSION }} - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+          echo "$(printf '%*s' ${#VERSION} | tr ' ' '-')$(printf '%*s' 11 | tr ' ' '-')" >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
-          echo "$COMMITS" >> "$TEMP_CHANGELOG"
+          
+          # Categorize commits
+          FEATURES=$(echo "$COMMITS" | grep -i "feat" | head -n 5 || echo "")
+          FIXES=$(echo "$COMMITS" | grep -i "fix" | head -n 5 || echo "")
+          OTHER=$(echo "$COMMITS" | grep -v -i "feat\|fix" | head -n 5 || echo "")
+          
+          # Add concise categorized changes (only main categories for release notes)
+          if [ ! -z "$FEATURES" ]; then
+            echo "Features" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~" >> "$TEMP_CHANGELOG"
+            echo "$FEATURES" >> "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+          fi
+          
+          if [ ! -z "$FIXES" ]; then
+            echo "Bug Fixes" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~~" >> "$TEMP_CHANGELOG"
+            echo "$FIXES" >> "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+          fi
+          
+          if [ ! -z "$OTHER" ]; then
+            echo "Other Changes" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~~~~~~" >> "$TEMP_CHANGELOG"
+            echo "$OTHER" >> "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+          fi
 
-          tail -n +4 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+          # Copy existing changelog content (excluding header)
+          tail -n +5 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
           mv "$TEMP_CHANGELOG" "$CHANGELOG_FILE"
 
       - name: Commit and push CHANGELOG
+        if: steps.check_version.outputs.exists == 'false'
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
-          git add CHANGELOG.md
+          git add CHANGELOG.rst
           git commit -m "docs: update CHANGELOG for version ${{ env.VERSION }}" || echo "No changes to commit"
           git push
 
@@ -205,7 +258,7 @@ jobs:
             echo "LICENSE file not found. Skipping."
           fi
 
-          # Copy README.md or README.rst if available
+          # Copy README files if available
           if [ -f "README.md" ]; then
             echo "Copying README.md..."
             cp README.md release-files/
@@ -213,34 +266,39 @@ jobs:
             echo "Copying README.rst..."
             cp README.rst release-files/
           else
-            echo "No README.md or README.rst file found. Skipping."
+            echo "No README file found. Skipping."
           fi
 
           echo "Release files prepared successfully."
 
-
-
       - name: Generate Release Notes
         run: |
-          CHANGELOG_FILE="CHANGELOG.md"
+          CHANGELOG_FILE="CHANGELOG.rst"
 
           if [ ! -f "$CHANGELOG_FILE" ]; then
             echo "::warning::CHANGELOG not found. Using simple notes."
             RELEASE_NOTES="Release ${{ env.VERSION }}"
           else
-            SECTION_HEADER="## \[${{ env.VERSION }}\]"
-            NEXT_SECTION_PATTERN="## \["
+            SECTION_HEADER="^${{ env.VERSION }} - "
+            NEXT_SECTION_PATTERN="^[0-9]"
 
             SECTION_START=$(grep -n "$SECTION_HEADER" "$CHANGELOG_FILE" | cut -d: -f1 || echo "")
             if [ -z "$SECTION_START" ]; then
               RELEASE_NOTES="Release ${{ env.VERSION }}"
             else
-              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 1 | cut -d: -f1 || echo "")
+              # Skip the section header line and its underline
+              CONTENT_START=$((SECTION_START + 2))
+              
+              # Find next version section to determine where to stop
+              NEXT_SECTION_START=$(tail -n +$CONTENT_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 1 | cut -d: -f1 || echo "")
+              
               if [ -z "$NEXT_SECTION_START" ]; then
-                RELEASE_NOTES=$(tail -n +$SECTION_START "$CHANGELOG_FILE")
+                # No next section found, extract to end of file
+                RELEASE_NOTES=$(tail -n +$CONTENT_START "$CHANGELOG_FILE" | head -n 50)
               else
-                SECTION_END=$((SECTION_START + NEXT_SECTION_START - 2))
-                RELEASE_NOTES=$(sed -n "${SECTION_START},${SECTION_END}p" "$CHANGELOG_FILE")
+                # Calculate end position
+                SECTION_END=$((CONTENT_START + NEXT_SECTION_START - 2))
+                RELEASE_NOTES=$(sed -n "${CONTENT_START},${SECTION_END}p" "$CHANGELOG_FILE" | head -n 50)
               fi
             fi
           fi
@@ -255,7 +313,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: "Release ${{ env.VERSION }}"
-          tag_name: "v${{ env.VERSION }}"
+          tag_name: "${{ env.TAG }}"
           body: ${{ env.RELEASE_NOTES }}
           draft: false
           prerelease: ${{ contains(env.TAG, '-alpha') || contains(env.TAG, '-beta') || contains(env.TAG, '-rc') }}

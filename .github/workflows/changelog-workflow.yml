@@ -62,21 +62,26 @@ jobs:
       - name: Generate CHANGELOG
         id: changelog
         run: |
-          CHANGELOG_FILE="CHANGELOG.md"
-          TEMP_CHANGELOG="temp_changelog.md"
+          CHANGELOG_FILE="CHANGELOG.rst"
+          TEMP_CHANGELOG="temp_changelog.rst"
           
           # Create empty file if it doesn't exist
           if [ ! -f "$CHANGELOG_FILE" ]; then
-            echo "# Changelog" > "$CHANGELOG_FILE"
+            echo "Changelog" > "$CHANGELOG_FILE"
+            echo "=========" >> "$CHANGELOG_FILE"
             echo "" >> "$CHANGELOG_FILE"
             echo "All notable changes to this project will be documented in this file." >> "$CHANGELOG_FILE"
             echo "" >> "$CHANGELOG_FILE"
           fi
           
-          # Check if version already exists in CHANGELOG
-          VERSION_EXISTS=$(grep -c "## \[${{ env.VERSION }}\]" "$CHANGELOG_FILE" || echo "0")
+          # Normalize version by removing 'v' prefix if present
+          NORMALIZED_VERSION="${{ env.VERSION }}"
+          NORMALIZED_VERSION=${NORMALIZED_VERSION#v}
+          
+          # Check if version already exists in CHANGELOG (check both with and without 'v' prefix)
+          VERSION_EXISTS=$(grep -c "$NORMALIZED_VERSION - " "$CHANGELOG_FILE" || echo "0")
           if [ "$VERSION_EXISTS" != "0" ]; then
-            echo "Version ${{ env.VERSION }} already exists in CHANGELOG. Will update it."
+            echo "Version $NORMALIZED_VERSION already exists in CHANGELOG. Will update it."
           fi
           
           # Get the latest tag or commit before this PR
@@ -108,7 +113,8 @@ jobs:
           fi
           
           # Create CHANGELOG header for temp file
-          echo "# Changelog" > "$TEMP_CHANGELOG"
+          echo "Changelog" > "$TEMP_CHANGELOG"
+          echo "=========" >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
           echo "All notable changes to this project will be documented in this file." >> "$TEMP_CHANGELOG"
           echo "" >> "$TEMP_CHANGELOG"
@@ -116,7 +122,7 @@ jobs:
           # Handle the case where version already exists
           if [ "$VERSION_EXISTS" != "0" ]; then
             # Read the existing CHANGELOG and replace the temp file with everything up to the version header
-            SECTION_HEADER="## \[${{ env.VERSION }}\]"
+            SECTION_HEADER="$NORMALIZED_VERSION - "
             CHANGELOG_CONTENT=$(cat "$CHANGELOG_FILE")
             
             # Find line number of the version header
@@ -128,15 +134,16 @@ jobs:
               head -n $BEFORE_SECTION "$CHANGELOG_FILE" > "$TEMP_CHANGELOG"
             fi
             
-            # Add version section header
-            echo "## [${{ env.VERSION }}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+            # Add version section header (RST format)
+            echo "$NORMALIZED_VERSION - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+            echo "$(printf '%*s' ${#NORMALIZED_VERSION} | tr ' ' '-')$(printf '%*s' 11 | tr ' ' '-')" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
             
             # For manually triggered updates with empty commits, copy existing section content
             if [ -z "$COMMITS" ]; then
               # Find next section to determine where current section ends
-              NEXT_SECTION_PATTERN="## \["
-              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "$NEXT_SECTION_PATTERN" | head -n 2 | tail -n 1 | cut -d: -f1)
+              NEXT_SECTION_PATTERN="[0-9]"
+              NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "^$NEXT_SECTION_PATTERN" | head -n 2 | tail -n 1 | cut -d: -f1)
               
               if [ -z "$NEXT_SECTION_START" ]; then
                 # If no next section, skip copying section content and continue with the rest of the file below
@@ -144,7 +151,7 @@ jobs:
               else
                 # Calculate end of current section
                 SECTION_END=$((SECTION_START + NEXT_SECTION_START - 2))
-                # Copy section content without header
+                # Copy section content without header and underline
                 sed -n "$((SECTION_START + 2)),$SECTION_END p" "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
                 echo "" >> "$TEMP_CHANGELOG"
                 
@@ -158,65 +165,73 @@ jobs:
               fi
             fi
           else
-            # Add new version section header
-            echo "## [${{ env.VERSION }}] - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+            # Add new version section header (RST format)
+            echo "$NORMALIZED_VERSION - $(date +'%Y-%m-%d')" >> "$TEMP_CHANGELOG"
+            echo "$(printf '%*s' ${#NORMALIZED_VERSION} | tr ' ' '-')$(printf '%*s' 11 | tr ' ' '-')" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Categorize commits by conventional commit types
-          FEATURES=$(echo "$COMMITS" | grep -i "feat" || echo "")
-          FIXES=$(echo "$COMMITS" | grep -i "fix" || echo "")
-          DOCS=$(echo "$COMMITS" | grep -i "doc" || echo "")
-          TESTS=$(echo "$COMMITS" | grep -i "test" || echo "")
-          REFACTOR=$(echo "$COMMITS" | grep -i "refactor" || echo "")
-          CHORE=$(echo "$COMMITS" | grep -i "chore" || echo "")
-          OTHER=$(echo "$COMMITS" | grep -v -i "feat\|fix\|doc\|test\|refactor\|chore" || echo "")
+          FEATURES=$(echo "$COMMITS" | grep -i "feat" | head -n 5 || echo "")
+          FIXES=$(echo "$COMMITS" | grep -i "fix" | head -n 5 || echo "")
+          DOCS=$(echo "$COMMITS" | grep -i "doc" | head -n 3 || echo "")
+          TESTS=$(echo "$COMMITS" | grep -i "test" | head -n 3 || echo "")
+          REFACTOR=$(echo "$COMMITS" | grep -i "refactor" | head -n 3 || echo "")
+          CHORE=$(echo "$COMMITS" | grep -i "chore" | head -n 3 || echo "")
+          OTHER=$(echo "$COMMITS" | grep -v -i "feat\|fix\|doc\|test\|refactor\|chore" | head -n 3 || echo "")
           
           # Add features
           if [ ! -z "$FEATURES" ]; then
-            echo "### Features" >> "$TEMP_CHANGELOG"
+            echo "Features" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~" >> "$TEMP_CHANGELOG"
             echo "$FEATURES" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Add fixes
           if [ ! -z "$FIXES" ]; then
-            echo "### Bug Fixes" >> "$TEMP_CHANGELOG"
+            echo "Bug Fixes" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~~" >> "$TEMP_CHANGELOG"
             echo "$FIXES" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Add docs
           if [ ! -z "$DOCS" ]; then
-            echo "### Documentation" >> "$TEMP_CHANGELOG"
+            echo "Documentation" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~~~~~~" >> "$TEMP_CHANGELOG"
             echo "$DOCS" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Add tests
           if [ ! -z "$TESTS" ]; then
-            echo "### Tests" >> "$TEMP_CHANGELOG"
+            echo "Tests" >> "$TEMP_CHANGELOG"
+            echo "~~~~~" >> "$TEMP_CHANGELOG"
             echo "$TESTS" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Add refactoring
           if [ ! -z "$REFACTOR" ]; then
-            echo "### Refactoring" >> "$TEMP_CHANGELOG"
+            echo "Refactoring" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~~~~" >> "$TEMP_CHANGELOG"
             echo "$REFACTOR" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Add chore
           if [ ! -z "$CHORE" ]; then
-            echo "### Chore" >> "$TEMP_CHANGELOG"
+            echo "Chore" >> "$TEMP_CHANGELOG"
+            echo "~~~~~" >> "$TEMP_CHANGELOG"
             echo "$CHORE" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
           
           # Add other changes
           if [ ! -z "$OTHER" ]; then
-            echo "### Other Changes" >> "$TEMP_CHANGELOG"
+            echo "Other Changes" >> "$TEMP_CHANGELOG"
+            echo "~~~~~~~~~~~~~" >> "$TEMP_CHANGELOG"
             echo "$OTHER" >> "$TEMP_CHANGELOG"
             echo "" >> "$TEMP_CHANGELOG"
           fi
@@ -224,7 +239,7 @@ jobs:
           # If we're updating an existing version, copy content after this version section
           if [ "$VERSION_EXISTS" != "0" ]; then
             # Find next section to determine where to continue copying
-            NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "## \[" | head -n 2 | tail -n 1 | cut -d: -f1)
+            NEXT_SECTION_START=$(tail -n +$SECTION_START "$CHANGELOG_FILE" | grep -n "^[0-9]" | head -n 2 | tail -n 1 | cut -d: -f1)
             
             if [ -z "$NEXT_SECTION_START" ]; then
               # If no next section, we're done
@@ -237,7 +252,7 @@ jobs:
             fi
           else
             # For new versions, append existing changelog content (excluding header)
-            tail -n +4 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
+            tail -n +5 "$CHANGELOG_FILE" >> "$TEMP_CHANGELOG"
           fi
           
           # Replace the old changelog
@@ -283,14 +298,14 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
-              body: `${context.payload.pull_request.body}\n\n## Changelog Preview\n\`\`\`markdown\n${changelog.substring(0, 1500)}...\n\`\`\``
+              body: `${context.payload.pull_request.body}\n\n## Changelog Preview\n\`\`\`\n${changelog.substring(0, 1000)}...\n\`\`\``
             });
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: `## CHANGELOG updated\n\nThe CHANGELOG has been updated for version ${{ env.VERSION }}.\n\nPreview:\n\`\`\`markdown\n${changelog.substring(0, 1500)}...\n\`\`\``
+              body: `## CHANGELOG updated\n\nThe CHANGELOG has been updated for version ${{ env.VERSION }}.\n\nPreview:\n\`\`\`\n${changelog.substring(0, 1000)}...\n\`\`\``
             });
 
       - name: Commit CHANGELOG
@@ -298,6 +313,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add CHANGELOG.md
+          git add CHANGELOG.rst
           git commit -m "docs: update CHANGELOG for version ${{ env.VERSION }}" || echo "No changes to commit"
           git push

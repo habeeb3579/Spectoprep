@@ -1,4 +1,4 @@
-SpectroPrep
+SpectoPrep
 ===========
 
 .. image:: https://img.shields.io/pypi/v/spectoprep.svg
@@ -23,7 +23,7 @@ Spectroscopy preprocessing using Bayesian Optimization
 Overview
 --------
 
-SpectroPrep provides a toolkit for optimizing spectroscopic data preprocessing pipelines using Bayesian optimization. It automatically discovers the optimal combination of preprocessing techniques and their parameters to improve model performance for spectroscopic data analysis.
+SpectoPrep provides a toolkit for optimizing spectroscopic data preprocessing pipelines using Bayesian optimization. It automatically discovers the optimal combination of preprocessing techniques and their parameters to improve model performance for spectroscopic data analysis.
 
 Features
 --------
@@ -45,7 +45,7 @@ Quick Start
 
 .. code-block:: python
 
-    from spectroprep.pipeline.optimizer import PipelineOptimizer
+    from spectoprep.pipeline.optimizer import PipelineOptimizer
     import numpy as np
 
     # Prepare your data

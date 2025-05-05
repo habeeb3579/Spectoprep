@@ -18,4 +18,4 @@ __all__ = [
 
 __author__ = """Habeeb Babatunde"""
 __email__ = 'babatundehabeeb2@gmail.com'
-__version__ = "1.0.0-alpha"
+__version__ = "1.0.1-alpha"

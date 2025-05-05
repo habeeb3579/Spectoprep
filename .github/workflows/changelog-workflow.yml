@@ -271,7 +271,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PROJECT_TOKENB || secrets.GITHUB_TOKEN }}
           commit-message: "docs: update CHANGELOG for version ${{ env.VERSION }}"
           title: "Update CHANGELOG for version ${{ env.VERSION }}"
           body: |
@@ -289,7 +289,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PROJECT_TOKENB || secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const changelog = fs.readFileSync('${{ steps.changelog.outputs.file }}', 'utf8');

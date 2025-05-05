@@ -1,6 +1,6 @@
 {% set name = "spectoprep" %}
 {% set pypi_name = "spectoprep" %}
-{% set version = "1.0.0.alpha" %}   # This will be dynamically updated during CI/CD
+{% set version = "1.0.1.alpha" %}   # This will be dynamically updated during CI/CD
 
 package:
   name: {{ name|lower }}

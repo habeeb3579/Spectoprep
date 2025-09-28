@@ -125,6 +125,25 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
+Citation
+--------
+
+If you use this package in your research, please cite our paper:
+
+.. code-block:: bibtex
+
+   @article{babatunde2025automated,
+     title={Automated Spectral Preprocessing via Bayesian Optimization for Chemometric Analysis of Milk Constituents},
+     author={Babatunde, Habeeb Abolaji and McDougal, Owen M and Andersen, Timothy},
+     journal={Foods},
+     volume={14},
+     number={17},
+     pages={2996},
+     year={2025},
+     publisher={MDPI}
+   }
+
+
 .. warning::
 
    This package is still under heavy development.

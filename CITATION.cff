@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this package, please cite our paper."
+title: "Automated Spectral Preprocessing via Bayesian Optimization for Chemometric Analysis of Milk Constituents"
+authors:
+  - family-names: Babatunde
+    given-names: Habeeb Abolaji
+  - family-names: McDougal
+    given-names: Owen M
+  - family-names: Andersen
+    given-names: Timothy
+version: "1.0.0"
+date-released: 2025-09-01
+doi: "https://doi.org/10.3390/foods14172996"   
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Babatunde
+      given-names: Habeeb Abolaji
+    - family-names: McDougal
+      given-names: Owen M
+    - family-names: Andersen
+      given-names: Timothy
+  title: "Automated Spectral Preprocessing via Bayesian Optimization for Chemometric Analysis of Milk Constituents"
+  journal: "Foods"
+  volume: "14"
+  number: "17"
+  pages: "2996"
+  year: 2025
+  publisher: "MDPI"
+  doi: "https://doi.org/10.3390/foods14172996"   

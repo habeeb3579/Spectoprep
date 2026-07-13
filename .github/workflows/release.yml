@@ -70,14 +70,10 @@ jobs:
           conda-build-version: "*"
       - name: Install anaconda-client
         run: |
-          # pip into the active env is more reliable than conda for the CLI entrypoint.
-          python -m pip install --upgrade "anaconda-client>=1.12"
-          SCRIPTS="$(python -c 'import sysconfig; print(sysconfig.get_path("scripts"))')"
-          echo "${SCRIPTS}" >> "${GITHUB_PATH}"
-          export PATH="${SCRIPTS}:${PATH}"
-          hash -r
-          command -v anaconda
-          anaconda --version
+          # The setup-miniconda "build" env may not ship pip; install via conda.
+          conda install -y -c conda-forge pip anaconda-client
+          test -x "${CONDA_PREFIX}/bin/anaconda"
+          "${CONDA_PREFIX}/bin/anaconda" --version
       - name: Build conda package
         run: |
           conda build --version
@@ -103,18 +99,17 @@ jobs:
             find "${GITHUB_WORKSPACE}/conda-bld" -type f | head -50
             exit 1
           fi
-          SCRIPTS="$(python -c 'import sysconfig; print(sysconfig.get_path("scripts"))')"
-          export PATH="${SCRIPTS}:${PATH}"
-          hash -r
-          if ! command -v anaconda >/dev/null 2>&1; then
-            echo "anaconda CLI still missing; scripts dir=${SCRIPTS}"
-            ls -la "${SCRIPTS}" | head -50
-            python -m pip show anaconda-client
+          ANACONDA_CLI="${CONDA_PREFIX}/bin/anaconda"
+          if [ ! -x "${ANACONDA_CLI}" ]; then
+            echo "Missing ${ANACONDA_CLI}"
+            echo "CONDA_PREFIX=${CONDA_PREFIX}"
+            ls -la "${CONDA_PREFIX}/bin" | head -50
+            conda list anaconda-client
             exit 1
           fi
-          echo "Using: $(command -v anaconda)"
+          echo "Using: ${ANACONDA_CLI}"
           # --force allows re-running the workflow for the same version.
-          anaconda --token "${ANACONDA_TOKEN}" upload -u habeebest --force "${pkgs[@]}"
+          "${ANACONDA_CLI}" --token "${ANACONDA_TOKEN}" upload -u habeebest --force "${pkgs[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: conda-dist

@@ -8,7 +8,7 @@ pipeline optimization, and modeling using Ridge regression.
 
 __author__ = """Habeeb Babatunde"""
 __email__ = "babatundehabeeb2@gmail.com"
-__version__ = "1.0.1-alpha"
+__version__ = "1.0.2"
 
 from .logging import configure_logging, get_logger
 from .modelling.ridge import OptimizedRidgeCV

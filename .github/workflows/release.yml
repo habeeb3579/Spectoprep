@@ -66,7 +66,13 @@ jobs:
           # ``conda build`` plugin from the base env (not from ``build``).
           conda-build-version: "*"
       - name: Install anaconda-client
-        run: conda install -n base -y -c conda-forge anaconda-client
+        run: |
+          # Install into the *active* env (build). Packages in base alone are not
+          # always on PATH when another env is activated.
+          conda install -y -c conda-forge anaconda-client
+          hash -r
+          command -v anaconda
+          anaconda --version
       - name: Build conda package
         run: |
           conda build --version
@@ -92,8 +98,20 @@ jobs:
             find "${GITHUB_WORKSPACE}/conda-bld" -type f | head -50
             exit 1
           fi
+          # Prefer active-env CLI; fall back to base/miniconda bin.
+          if command -v anaconda >/dev/null 2>&1; then
+            ANACONDA_CLI="$(command -v anaconda)"
+          elif [ -x "${CONDA}/bin/anaconda" ]; then
+            ANACONDA_CLI="${CONDA}/bin/anaconda"
+          else
+            echo "anaconda CLI not found after installing anaconda-client"
+            conda list anaconda-client
+            ls -la "${CONDA}/bin/anaconda"* 2>/dev/null || true
+            exit 1
+          fi
+          echo "Using: ${ANACONDA_CLI}"
           # --force allows re-running the workflow for the same version (e.g. alpha retries).
-          anaconda --token "${ANACONDA_TOKEN}" upload -u habeebest --force "${pkgs[@]}"
+          "${ANACONDA_CLI}" --token "${ANACONDA_TOKEN}" upload -u habeebest --force "${pkgs[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: conda-dist

@@ -45,6 +45,9 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Allow re-runs after a successful publish (PyPI forbids replacing files).
+          skip-existing: true
 
   publish-conda:
     name: Publish to Anaconda.org (habeebest)
@@ -67,9 +70,11 @@ jobs:
           conda-build-version: "*"
       - name: Install anaconda-client
         run: |
-          # Install into the *active* env (build). Packages in base alone are not
-          # always on PATH when another env is activated.
-          conda install -y -c conda-forge anaconda-client
+          # pip into the active env is more reliable than conda for the CLI entrypoint.
+          python -m pip install --upgrade "anaconda-client>=1.12"
+          SCRIPTS="$(python -c 'import sysconfig; print(sysconfig.get_path("scripts"))')"
+          echo "${SCRIPTS}" >> "${GITHUB_PATH}"
+          export PATH="${SCRIPTS}:${PATH}"
           hash -r
           command -v anaconda
           anaconda --version
@@ -98,20 +103,18 @@ jobs:
             find "${GITHUB_WORKSPACE}/conda-bld" -type f | head -50
             exit 1
           fi
-          # Prefer active-env CLI; fall back to base/miniconda bin.
-          if command -v anaconda >/dev/null 2>&1; then
-            ANACONDA_CLI="$(command -v anaconda)"
-          elif [ -x "${CONDA}/bin/anaconda" ]; then
-            ANACONDA_CLI="${CONDA}/bin/anaconda"
-          else
-            echo "anaconda CLI not found after installing anaconda-client"
-            conda list anaconda-client
-            ls -la "${CONDA}/bin/anaconda"* 2>/dev/null || true
+          SCRIPTS="$(python -c 'import sysconfig; print(sysconfig.get_path("scripts"))')"
+          export PATH="${SCRIPTS}:${PATH}"
+          hash -r
+          if ! command -v anaconda >/dev/null 2>&1; then
+            echo "anaconda CLI still missing; scripts dir=${SCRIPTS}"
+            ls -la "${SCRIPTS}" | head -50
+            python -m pip show anaconda-client
             exit 1
           fi
-          echo "Using: ${ANACONDA_CLI}"
-          # --force allows re-running the workflow for the same version (e.g. alpha retries).
-          "${ANACONDA_CLI}" --token "${ANACONDA_TOKEN}" upload -u habeebest --force "${pkgs[@]}"
+          echo "Using: $(command -v anaconda)"
+          # --force allows re-running the workflow for the same version.
+          anaconda --token "${ANACONDA_TOKEN}" upload -u habeebest --force "${pkgs[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: conda-dist

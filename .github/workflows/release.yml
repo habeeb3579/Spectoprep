@@ -72,7 +72,7 @@ jobs:
           conda build --version
           conda build conda-recipe \
             -c conda-forge \
-            --noanaconda-upload \
+            --no-anaconda-upload \
             --output-folder "${GITHUB_WORKSPACE}/conda-bld"
       - name: Upload to Anaconda.org
         env:

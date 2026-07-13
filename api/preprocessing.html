@@ -1,0 +1,1610 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Preprocessing transforms &#8212; SpectoPrep 1.0.2</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=c74e6fab"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/preprocessing';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Visualization" href="visualization.html" />
+    <link rel="prev" title="Modelling" href="modelling.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">SpectoPrep</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    Usage
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../notebooks/corn_benchmark.html">
+    Corn NIR benchmark (Cargill / Eigenvector)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../notebooks/tutorial.html">
+    Tutorial (legacy milk example)
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../modules.html">
+    Package overview
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../readme.html">
+    SpectoPrep
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contributing.html">
+    Contributing
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../authors.html">
+    Credits
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../history.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/spectoprep/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    Usage
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../notebooks/corn_benchmark.html">
+    Corn NIR benchmark (Cargill / Eigenvector)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../notebooks/tutorial.html">
+    Tutorial (legacy milk example)
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../modules.html">
+    Package overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../readme.html">
+    SpectoPrep
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contributing.html">
+    Contributing
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../authors.html">
+    Credits
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../history.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/spectoprep/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Pipeline optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modelling.html">Modelling</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Preprocessing transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Preprocessing transforms</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="preprocessing-transforms">
+<h1>Preprocessing transforms<a class="headerlink" href="#preprocessing-transforms" title="Link to this heading">#</a></h1>
+<section id="module-spectoprep.preprocessing.baseline">
+<span id="baseline-and-detrending"></span><h2>Baseline and detrending<a class="headerlink" href="#module-spectoprep.preprocessing.baseline" title="Link to this heading">#</a></h2>
+<p>Baseline correction methods for spectroscopic data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.ALSBaselineCorrection">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.baseline.</span></span><span class="sig-name descname"><span class="pre">ALSBaselineCorrection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/baseline.html#ALSBaselineCorrection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Asymmetric Least Squares Baseline Correction.</p>
+<p>This method estimates the baseline of spectra by fitting a smooth curve
+that preferentially lies beneath the data points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lam</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default=1e4</em>) – Smoothness parameter. Higher values make the baseline smoother.</p></li>
+<li><p><strong>p</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default=0.001</em>) – Asymmetry parameter. Small values (&lt;&lt;1) force the baseline to lie
+below the data points.</p></li>
+<li><p><strong>niter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=10</em>) – Number of iterations for the ALS algorithm.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.ALSBaselineCorrection.baseline_">
+<span class="sig-name descname"><span class="pre">baseline_</span></span><a class="headerlink" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.baseline_" title="Link to this definition">#</a></dt>
+<dd><p>Estimated baseline for each spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.ALSBaselineCorrection.is_fitted_">
+<span class="sig-name descname"><span class="pre">is_fitted_</span></span><a class="headerlink" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.is_fitted_" title="Link to this definition">#</a></dt>
+<dd><p>Flag indicating if the transformer has been fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.ALSBaselineCorrection.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/baseline.html#ALSBaselineCorrection.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the baseline for the input data X.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.ALSBaselineCorrection.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/baseline.html#ALSBaselineCorrection.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.transform" title="Link to this definition">#</a></dt>
+<dd><p>Transform the input data X by subtracting the baseline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Baseline-corrected spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.DetrendTransformer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.baseline.</span></span><span class="sig-name descname"><span class="pre">DetrendTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'polynomial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dspline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/baseline.html#DetrendTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.baseline.DetrendTransformer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>A transformer for detrending time series or spectral data using various methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>default='polynomial'</em>) – The detrending method to use:
+- ‘simple’: Linear detrend between first and last points
+- ‘polynomial’: Polynomial detrend of specified order
+- ‘spline’: Spline detrend with specified order and spacing</p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=2</em>) – The order of the polynomial or spline fit.
+Ignored if method=’simple’.</p></li>
+<li><p><strong>dspline</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=100</em>) – The spacing between spline knots.
+Only used if method=’spline’.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.DetrendTransformer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/baseline.html#DetrendTransformer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.baseline.DetrendTransformer.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the transformer (no-op).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – Input data.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.baseline.DetrendTransformer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/baseline.html#DetrendTransformer.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.baseline.DetrendTransformer.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply detrending to the input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – Input data to detrend.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_detrended</strong> – Detrended data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-spectoprep.preprocessing.smoothing">
+<span id="smoothing"></span><h2>Smoothing<a class="headerlink" href="#module-spectoprep.preprocessing.smoothing" title="Link to this heading">#</a></h2>
+<p>Smoothing methods for spectroscopic data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.smoothing.SavitzkyGolay">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.smoothing.</span></span><span class="sig-name descname"><span class="pre">SavitzkyGolay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_win</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deriv_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/smoothing.html#SavitzkyGolay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.smoothing.SavitzkyGolay" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Savitzky-Golay filter for smoothing and differentiation of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filter_win</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=11</em>) – Length of the filter window (must be positive odd integer).</p></li>
+<li><p><strong>poly_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=2</em>) – Order of the polynomial used to fit the samples.
+Must be less than filter_win.</p></li>
+<li><p><strong>deriv_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=0</em>) – Order of the derivative to compute. 0 means smoothing only.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The Savitzky-Golay filter is a digital smoothing polynomial filter
+that can preserve the high-frequency components of the signal
+better than standard averaging techniques.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.smoothing.SavitzkyGolay.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/smoothing.html#SavitzkyGolay.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.smoothing.SavitzkyGolay.fit" title="Link to this definition">#</a></dt>
+<dd><p>Validate parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.smoothing.SavitzkyGolay.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/smoothing.html#SavitzkyGolay.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.smoothing.SavitzkyGolay.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply Savitzky-Golay filter to the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Filtered spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-spectoprep.preprocessing.scatter">
+<span id="scatter-correction"></span><h2>Scatter correction<a class="headerlink" href="#module-spectoprep.preprocessing.scatter" title="Link to this heading">#</a></h2>
+<p>Scatter correction methods for spectroscopic data preprocessing.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.StandardNormalVariate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.scatter.</span></span><span class="sig-name descname"><span class="pre">StandardNormalVariate</span></span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#StandardNormalVariate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.StandardNormalVariate" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Standard Normal Variate (SNV) transformation.</p>
+<p>SNV is a row-wise transformation that centers and scales each spectrum
+individually. It’s commonly used to remove scatter effects in
+spectroscopic data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.StandardNormalVariate.mean_">
+<span class="sig-name descname"><span class="pre">mean_</span></span><a class="headerlink" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.mean_" title="Link to this definition">#</a></dt>
+<dd><p>Mean of each sample (row) computed during fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.StandardNormalVariate.std_">
+<span class="sig-name descname"><span class="pre">std_</span></span><a class="headerlink" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.std_" title="Link to this definition">#</a></dt>
+<dd><p>Standard deviation of each sample computed during fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.StandardNormalVariate.is_fitted_">
+<span class="sig-name descname"><span class="pre">is_fitted_</span></span><a class="headerlink" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.is_fitted_" title="Link to this definition">#</a></dt>
+<dd><p>Flag indicating if the transformer has been fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.StandardNormalVariate.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#StandardNormalVariate.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute mean and standard deviation of each sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.StandardNormalVariate.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#StandardNormalVariate.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply the StandardNormalVariate transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Transformed spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.scatter.</span></span><span class="sig-name descname"><span class="pre">MultiplicativeScatterCorrection</span></span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#MultiplicativeScatterCorrection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Multiplicative Scatter Correction (MSC) for spectroscopic data.</p>
+<p>MSC performs a linear regression of each spectrum on a reference spectrum
+(usually the mean spectrum) and corrects using the estimated coefficients.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.mean_reference">
+<span class="sig-name descname"><span class="pre">mean_reference</span></span><a class="headerlink" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.mean_reference" title="Link to this definition">#</a></dt>
+<dd><p>Reference spectrum (mean of all spectra by default).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_features,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#MultiplicativeScatterCorrection.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute the reference spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#MultiplicativeScatterCorrection.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply the MSC transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Transformed spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.scatter.</span></span><span class="sig-name descname"><span class="pre">ExtendedMultiplicativeScatterCorrection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#ExtendedMultiplicativeScatterCorrection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Extended Multiplicative Scatter Correction (EMSC) for spectroscopic data.</p>
+<p>EMSC extends the MSC method by incorporating polynomial terms to account
+for more complex spectral variations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=2</em>) – Order of the polynomial used in the correction.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.reference_spectrum">
+<span class="sig-name descname"><span class="pre">reference_spectrum</span></span><a class="headerlink" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.reference_spectrum" title="Link to this definition">#</a></dt>
+<dd><p>Reference spectrum (mean of training spectra).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_features,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#ExtendedMultiplicativeScatterCorrection.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute the reference spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#ExtendedMultiplicativeScatterCorrection.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply the EMSC transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Transformed spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.LocalizedSNV">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.scatter.</span></span><span class="sig-name descname"><span class="pre">LocalizedSNV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#LocalizedSNV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.LocalizedSNV" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Localized Standard Normal Variate (LSNV) using a sliding window.</p>
+<p>LSNV applies the SNV transformation using a local window around each
+wavelength point rather than the entire spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>window_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default=11</em>) – Size of the sliding window. Must be odd.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.LocalizedSNV.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#LocalizedSNV.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.LocalizedSNV.fit" title="Link to this definition">#</a></dt>
+<dd><p>No-op.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.LocalizedSNV.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#LocalizedSNV.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.LocalizedSNV.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply LSNV transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Transformed spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.RobustNormalVariate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.scatter.</span></span><span class="sig-name descname"><span class="pre">RobustNormalVariate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#RobustNormalVariate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.RobustNormalVariate" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Robust Normal Variate (RNV) Preprocessing.</p>
+<p>RNV is a robust version of SNV that uses percentiles instead of mean and
+standard deviation to reduce the influence of outliers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lower_percentile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default=25</em>) – The lower percentile for robust scaling.</p></li>
+<li><p><strong>upper_percentile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default=75</em>) – The upper percentile for robust scaling.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.RobustNormalVariate.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#RobustNormalVariate.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.RobustNormalVariate.fit" title="Link to this definition">#</a></dt>
+<dd><p>No-op.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.scatter.RobustNormalVariate.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/scatter.html#RobustNormalVariate.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.scatter.RobustNormalVariate.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply RNV transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Transformed spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-spectoprep.preprocessing.norml">
+<span id="normalization-and-scaling"></span><h2>Normalization and scaling<a class="headerlink" href="#module-spectoprep.preprocessing.norml" title="Link to this heading">#</a></h2>
+<p>Normalization methods for spectroscopic data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.norml.</span></span><span class="sig-name descname"><span class="pre">Normalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'minmax'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#Normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>General normalization transformer that supports different methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>default='minmax'</em>) – Normalization method:
+- ‘minmax’: Scales each spectrum to a range specified by feature_range
+- ‘zscore’: Standardizes each spectrum (mean=0, std=1)</p></li>
+<li><p><strong>feature_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em> (</em><em>min</em><em>, </em><em>max</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>0</em><em>, </em><em>1</em><em>)</em>) – Range to scale the spectra to when method=’minmax’.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.min_">
+<span class="sig-name descname"><span class="pre">min_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.min_" title="Link to this definition">#</a></dt>
+<dd><p>Minimum values of each sample (for minmax scaling).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.max_">
+<span class="sig-name descname"><span class="pre">max_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.max_" title="Link to this definition">#</a></dt>
+<dd><p>Maximum values of each sample (for minmax scaling).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.mean_">
+<span class="sig-name descname"><span class="pre">mean_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.mean_" title="Link to this definition">#</a></dt>
+<dd><p>Mean values of each sample (for zscore scaling).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.std_">
+<span class="sig-name descname"><span class="pre">std_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.std_" title="Link to this definition">#</a></dt>
+<dd><p>Standard deviation of each sample (for zscore scaling).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.is_fitted_">
+<span class="sig-name descname"><span class="pre">is_fitted_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.is_fitted_" title="Link to this definition">#</a></dt>
+<dd><p>Flag indicating if the transformer has been fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#Normalization.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the normalization parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Normalization.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#Normalization.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.Normalization.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply the normalization transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Normalized spectra.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Autoscaling">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.norml.</span></span><span class="sig-name descname"><span class="pre">Autoscaling</span></span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#Autoscaling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.Autoscaling" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Autoscaling (column-wise standardization).</p>
+<p>Centers and scales data to unit variance along columns (features).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Autoscaling.mean_">
+<span class="sig-name descname"><span class="pre">mean_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Autoscaling.mean_" title="Link to this definition">#</a></dt>
+<dd><p>Mean value for each feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_features,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Autoscaling.std_">
+<span class="sig-name descname"><span class="pre">std_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.Autoscaling.std_" title="Link to this definition">#</a></dt>
+<dd><p>Standard deviation for each feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_features,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Autoscaling.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#Autoscaling.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.Autoscaling.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute the mean and standard deviation of each feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.Autoscaling.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#Autoscaling.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.Autoscaling.transform" title="Link to this definition">#</a></dt>
+<dd><p>Center and scale the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Transformed array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.MeanCentering">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.norml.</span></span><span class="sig-name descname"><span class="pre">MeanCentering</span></span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#MeanCentering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.MeanCentering" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Mean Centering transformation.</p>
+<p>Centers data by subtracting the column means, without scaling.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.MeanCentering.mean_">
+<span class="sig-name descname"><span class="pre">mean_</span></span><a class="headerlink" href="#spectoprep.preprocessing.norml.MeanCentering.mean_" title="Link to this definition">#</a></dt>
+<dd><p>Mean value for each feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_features,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.MeanCentering.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#MeanCentering.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.MeanCentering.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute the mean of each feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.MeanCentering.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#MeanCentering.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.MeanCentering.transform" title="Link to this definition">#</a></dt>
+<dd><p>Center the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input spectra.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_transformed</strong> – Centered array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.GlobalScaler">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.norml.</span></span><span class="sig-name descname"><span class="pre">GlobalScaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#GlobalScaler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.GlobalScaler" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Applies global scaling to spectra by a constant factor with optional mean centering and standardization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default=1.0</em>) – Scaling factor to multiply spectra.</p></li>
+<li><p><strong>mean</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to subtract the mean of each feature.</p></li>
+<li><p><strong>std</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default=False</em>) – Whether to divide by the standard deviation of each feature.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.GlobalScaler.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#GlobalScaler.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.GlobalScaler.fit" title="Link to this definition">#</a></dt>
+<dd><p>Compute mean and standard deviation if needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The training input samples.</p></li>
+<li><p><strong>y</strong> (<em>None</em>) – Ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>self</strong> – Returns self.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.GlobalScaler.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#GlobalScaler.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.GlobalScaler.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply global scaling transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array-like</em><em> of </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input samples.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>X_scaled</strong> – Transformed samples.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like of shape (n_samples, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.RowStandardizer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.norml.</span></span><span class="sig-name descname"><span class="pre">RowStandardizer</span></span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#RowStandardizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.RowStandardizer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Standardizes each row independently (i.e. across columns).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.RowStandardizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#RowStandardizer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.RowStandardizer.fit" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.RowStandardizer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#RowStandardizer.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.RowStandardizer.transform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.ColumnStandardizer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">spectoprep.preprocessing.norml.</span></span><span class="sig-name descname"><span class="pre">ColumnStandardizer</span></span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#ColumnStandardizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.ColumnStandardizer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.TransformerMixin.html#sklearn.base.TransformerMixin" title="(in scikit-learn v1.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code></a></p>
+<p>Standardizes columns using StandardScaler fitted on the training set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.ColumnStandardizer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#ColumnStandardizer.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.ColumnStandardizer.fit" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectoprep.preprocessing.norml.ColumnStandardizer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/spectoprep/preprocessing/norml.html#ColumnStandardizer.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spectoprep.preprocessing.norml.ColumnStandardizer.transform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="modelling.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Modelling</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="visualization.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Visualization</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-spectoprep.preprocessing.baseline">Baseline and detrending</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection"><code class="docutils literal notranslate"><span class="pre">ALSBaselineCorrection</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.baseline_"><code class="docutils literal notranslate"><span class="pre">ALSBaselineCorrection.baseline_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.is_fitted_"><code class="docutils literal notranslate"><span class="pre">ALSBaselineCorrection.is_fitted_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.fit"><code class="docutils literal notranslate"><span class="pre">ALSBaselineCorrection.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.ALSBaselineCorrection.transform"><code class="docutils literal notranslate"><span class="pre">ALSBaselineCorrection.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.DetrendTransformer"><code class="docutils literal notranslate"><span class="pre">DetrendTransformer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.DetrendTransformer.fit"><code class="docutils literal notranslate"><span class="pre">DetrendTransformer.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.baseline.DetrendTransformer.transform"><code class="docutils literal notranslate"><span class="pre">DetrendTransformer.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-spectoprep.preprocessing.smoothing">Smoothing</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.smoothing.SavitzkyGolay"><code class="docutils literal notranslate"><span class="pre">SavitzkyGolay</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.smoothing.SavitzkyGolay.fit"><code class="docutils literal notranslate"><span class="pre">SavitzkyGolay.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.smoothing.SavitzkyGolay.transform"><code class="docutils literal notranslate"><span class="pre">SavitzkyGolay.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-spectoprep.preprocessing.scatter">Scatter correction</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.StandardNormalVariate"><code class="docutils literal notranslate"><span class="pre">StandardNormalVariate</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.mean_"><code class="docutils literal notranslate"><span class="pre">StandardNormalVariate.mean_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.std_"><code class="docutils literal notranslate"><span class="pre">StandardNormalVariate.std_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.is_fitted_"><code class="docutils literal notranslate"><span class="pre">StandardNormalVariate.is_fitted_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.fit"><code class="docutils literal notranslate"><span class="pre">StandardNormalVariate.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.StandardNormalVariate.transform"><code class="docutils literal notranslate"><span class="pre">StandardNormalVariate.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection"><code class="docutils literal notranslate"><span class="pre">MultiplicativeScatterCorrection</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.mean_reference"><code class="docutils literal notranslate"><span class="pre">MultiplicativeScatterCorrection.mean_reference</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.fit"><code class="docutils literal notranslate"><span class="pre">MultiplicativeScatterCorrection.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.MultiplicativeScatterCorrection.transform"><code class="docutils literal notranslate"><span class="pre">MultiplicativeScatterCorrection.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection"><code class="docutils literal notranslate"><span class="pre">ExtendedMultiplicativeScatterCorrection</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.reference_spectrum"><code class="docutils literal notranslate"><span class="pre">ExtendedMultiplicativeScatterCorrection.reference_spectrum</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.fit"><code class="docutils literal notranslate"><span class="pre">ExtendedMultiplicativeScatterCorrection.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.ExtendedMultiplicativeScatterCorrection.transform"><code class="docutils literal notranslate"><span class="pre">ExtendedMultiplicativeScatterCorrection.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.LocalizedSNV"><code class="docutils literal notranslate"><span class="pre">LocalizedSNV</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.LocalizedSNV.fit"><code class="docutils literal notranslate"><span class="pre">LocalizedSNV.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.LocalizedSNV.transform"><code class="docutils literal notranslate"><span class="pre">LocalizedSNV.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.RobustNormalVariate"><code class="docutils literal notranslate"><span class="pre">RobustNormalVariate</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.RobustNormalVariate.fit"><code class="docutils literal notranslate"><span class="pre">RobustNormalVariate.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.scatter.RobustNormalVariate.transform"><code class="docutils literal notranslate"><span class="pre">RobustNormalVariate.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-spectoprep.preprocessing.norml">Normalization and scaling</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization"><code class="docutils literal notranslate"><span class="pre">Normalization</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.min_"><code class="docutils literal notranslate"><span class="pre">Normalization.min_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.max_"><code class="docutils literal notranslate"><span class="pre">Normalization.max_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.mean_"><code class="docutils literal notranslate"><span class="pre">Normalization.mean_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.std_"><code class="docutils literal notranslate"><span class="pre">Normalization.std_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.is_fitted_"><code class="docutils literal notranslate"><span class="pre">Normalization.is_fitted_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.fit"><code class="docutils literal notranslate"><span class="pre">Normalization.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Normalization.transform"><code class="docutils literal notranslate"><span class="pre">Normalization.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Autoscaling"><code class="docutils literal notranslate"><span class="pre">Autoscaling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Autoscaling.mean_"><code class="docutils literal notranslate"><span class="pre">Autoscaling.mean_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Autoscaling.std_"><code class="docutils literal notranslate"><span class="pre">Autoscaling.std_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Autoscaling.fit"><code class="docutils literal notranslate"><span class="pre">Autoscaling.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.Autoscaling.transform"><code class="docutils literal notranslate"><span class="pre">Autoscaling.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.MeanCentering"><code class="docutils literal notranslate"><span class="pre">MeanCentering</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.MeanCentering.mean_"><code class="docutils literal notranslate"><span class="pre">MeanCentering.mean_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.MeanCentering.fit"><code class="docutils literal notranslate"><span class="pre">MeanCentering.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.MeanCentering.transform"><code class="docutils literal notranslate"><span class="pre">MeanCentering.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.GlobalScaler"><code class="docutils literal notranslate"><span class="pre">GlobalScaler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.GlobalScaler.fit"><code class="docutils literal notranslate"><span class="pre">GlobalScaler.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.GlobalScaler.transform"><code class="docutils literal notranslate"><span class="pre">GlobalScaler.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.RowStandardizer"><code class="docutils literal notranslate"><span class="pre">RowStandardizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.RowStandardizer.fit"><code class="docutils literal notranslate"><span class="pre">RowStandardizer.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.RowStandardizer.transform"><code class="docutils literal notranslate"><span class="pre">RowStandardizer.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.ColumnStandardizer"><code class="docutils literal notranslate"><span class="pre">ColumnStandardizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.ColumnStandardizer.fit"><code class="docutils literal notranslate"><span class="pre">ColumnStandardizer.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#spectoprep.preprocessing.norml.ColumnStandardizer.transform"><code class="docutils literal notranslate"><span class="pre">ColumnStandardizer.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/api/preprocessing.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Habeeb Babatunde.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

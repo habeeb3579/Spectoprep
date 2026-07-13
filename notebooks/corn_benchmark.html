@@ -1,0 +1,1118 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Corn NIR benchmark (Cargill / Eigenvector) &#8212; SpectoPrep 1.0.2</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=a35ea3b2" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=c74e6fab"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/corn_benchmark';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorial (legacy milk example)" href="tutorial.html" />
+    <link rel="prev" title="Getting started" href="../getting_started.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">SpectoPrep</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    Usage
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Corn NIR benchmark (Cargill / Eigenvector)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorial.html">
+    Tutorial (legacy milk example)
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../modules.html">
+    Package overview
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../readme.html">
+    SpectoPrep
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contributing.html">
+    Contributing
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../authors.html">
+    Credits
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../history.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/spectoprep/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    Usage
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Corn NIR benchmark (Cargill / Eigenvector)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorial.html">
+    Tutorial (legacy milk example)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../modules.html">
+    Package overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../readme.html">
+    SpectoPrep
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contributing.html">
+    Contributing
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../authors.html">
+    Credits
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../history.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/spectoprep/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/habeeb3579/Spectoprep" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Corn NIR benchmark (Cargill / Eigenvector)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Corn-NIR-benchmark-(Cargill-/-Eigenvector)">
+<h1>Corn NIR benchmark (Cargill / Eigenvector)<a class="headerlink" href="#Corn-NIR-benchmark-(Cargill-/-Eigenvector)" title="Link to this heading">#</a></h1>
+<p>This notebook walks through SpectoPrep on the public <strong>corn</strong> NIR dataset (<code class="docutils literal notranslate"><span class="pre">m5</span></code> instrument): raw spectra, nested cross-validated optimisation, consensus preprocessing per constituent, and predicted-versus-reference plots.</p>
+<p>Constituents: <strong>Moisture</strong>, <strong>Oil</strong>, <strong>Protein</strong>, <strong>Starch</strong>.</p>
+<blockquote>
+<div><p>Full paper-grade nested CV (<code class="docutils literal notranslate"><span class="pre">init_points=10</span></code>, <code class="docutils literal notranslate"><span class="pre">n_iter=25</span></code> × 5 outer folds × 4 constituents) takes several minutes. Prefer loading precomputed results from <code class="docutils literal notranslate"><span class="pre">examples/corn_results/</span></code> after running <code class="docutils literal notranslate"><span class="pre">examples/run_corn_benchmark.py</span></code>, or use the shorter live demo cells below.</p>
+</div></blockquote>
+<section id="1.-Load-data">
+<h2>1. Load data<a class="headerlink" href="#1.-Load-data" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from pathlib import Path
+import json
+import numpy as np
+import scipy.io as sio
+import matplotlib.pyplot as plt
+
+from spectoprep import PipelineOptimizer, SpectroPrepPlotter
+
+COMPONENTS = [&quot;Moisture&quot;, &quot;Oil&quot;, &quot;Protein&quot;, &quot;Starch&quot;]
+
+# Resolve repo examples/ whether this notebook is under docs/notebooks/ or notebook/
+for candidate in [Path(&quot;../../examples&quot;), Path(&quot;../examples&quot;), Path(&quot;examples&quot;)]:
+    if candidate.exists():
+        EXAMPLES = candidate.resolve()
+        break
+else:
+    EXAMPLES = Path(&quot;examples&quot;).resolve()
+
+CORN_CANDIDATES = [
+    EXAMPLES / &quot;data&quot; / &quot;corn.mat&quot;,
+    Path(&quot;/tmp/spectoprep-data/corn.mat&quot;),
+]
+CORN = next((p for p in CORN_CANDIDATES if p.exists()), None)
+assert CORN is not None, (
+    &quot;Corn dataset not found. Place corn.mat at examples/data/corn.mat &quot;
+    &quot;or /tmp/spectoprep-data/corn.mat (https://eigenvector.com/data/Corn/).&quot;
+)
+
+d = sio.loadmat(CORN, struct_as_record=False, squeeze_me=True)
+X = np.asarray(d[&quot;m5spec&quot;].data, dtype=float)
+Y = np.asarray(d[&quot;propvals&quot;].data, dtype=float)
+try:
+    wavelengths = np.asarray(d[&quot;m5spec&quot;].axisscale[1], dtype=float).ravel()
+    if wavelengths.size != X.shape[1]:
+        raise ValueError
+except Exception:
+    wavelengths = np.linspace(1100, 2498, X.shape[1])
+
+print(f&quot;Loaded {CORN}&quot;)
+print(f&quot;X={X.shape}, Y={Y.shape}, λ=[{wavelengths.min():.0f}, {wavelengths.max():.0f}] nm&quot;)
+print(&quot;Constituents:&quot;, COMPONENTS)
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loaded /Users/habeebbabatunde/Downloads/Spectoprep-main/examples/data/corn.mat
+X=(80, 700), Y=(80, 4), λ=[1100, 2498] nm
+Constituents: [&#39;Moisture&#39;, &#39;Oil&#39;, &#39;Protein&#39;, &#39;Starch&#39;]
+</pre></div></div>
+</div>
+</section>
+<section id="2.-Raw-spectra-(full-set,-inverted-wavelength-axis)">
+<h2>2. Raw spectra (full set, inverted wavelength axis)<a class="headerlink" href="#2.-Raw-spectra-(full-set,-inverted-wavelength-axis)" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>SpectroPrepPlotter.set_style(context=&quot;notebook&quot;, font_scale=1.1)
+SpectroPrepPlotter.plot_spectra(
+    wavelengths,
+    X,
+    title=&quot;Corn NIR (m5) — raw spectra (n=80)&quot;,
+    xlabel=&quot;Wavelength (nm)&quot;,
+    ylabel=&quot;Absorbance&quot;,
+    alpha=0.35,
+    invert_xaxis=True,
+)
+plt.show()
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_4_0.png" src="../_images/notebooks_corn_benchmark_4_0.png" />
+</div>
+</div>
+</section>
+<section id="3.-Load-tracked-optimal-preprocessing-(from-full-benchmark)">
+<h2>3. Load tracked optimal preprocessing (from full benchmark)<a class="headerlink" href="#3.-Load-tracked-optimal-preprocessing-(from-full-benchmark)" title="Link to this heading">#</a></h2>
+<p>Run once from the repo root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/run_corn_benchmark.py
+</pre></div>
+</div>
+<p>This writes <code class="docutils literal notranslate"><span class="pre">examples/corn_results/optimal_pipelines.json</span></code> with per-fold chains, consensus pipelines, and nested-CV metrics for every constituent.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>results_path = EXAMPLES / &quot;corn_results&quot; / &quot;optimal_pipelines.json&quot;
+if results_path.exists():
+    summary = json.loads(results_path.read_text())
+    print(&quot;Protocol:&quot;, json.dumps(summary[&quot;protocol&quot;], indent=2))
+    print(&quot;\nConsensus optimal preprocessing per constituent:&quot;)
+    for name, block in summary[&quot;constituents&quot;].items():
+        chain = &quot; → &quot;.join(block[&quot;consensus_pipeline&quot;])
+        spx = block[&quot;spectoprep&quot;]
+        print(f&quot;  {name:9s}: {chain}&quot;)
+        print(f&quot;             R²={spx[&#39;r2&#39;]:.3f}, RMSE={spx[&#39;rmse&#39;]:.4f}, RPD={spx[&#39;rpd&#39;]:.1f}&quot;)
+        print(f&quot;             fold chains: {block[&#39;fold_pipelines&#39;]}&quot;)
+else:
+    summary = None
+    print(f&quot;No precomputed results at {results_path}&quot;)
+    print(&quot;Run: python examples/run_corn_benchmark.py&quot;)
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Protocol: {
+  &#34;instrument&#34;: &#34;m5&#34;,
+  &#34;outer_cv&#34;: &#34;KFold(n_splits=5, shuffle=True, random_state=42)&#34;,
+  &#34;inner_cv&#34;: &#34;group_kfold n_splits=3&#34;,
+  &#34;init_points&#34;: 10,
+  &#34;n_iter&#34;: 25,
+  &#34;evaluations_per_outer_fold&#34;: 35,
+  &#34;preprocessing_steps&#34;: [
+    &#34;snv&#34;,
+    &#34;msc&#34;,
+    &#34;savgol&#34;,
+    &#34;detrend&#34;,
+    &#34;scaler&#34;,
+    &#34;robust_scaler&#34;,
+    &#34;meancn&#34;
+  ]
+}
+
+Consensus optimal preprocessing per constituent:
+  Moisture : savgol → scaler
+             R²=1.000, RMSE=0.0081, RPD=46.7
+             fold chains: [[&#39;savgol&#39;, &#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;], [&#39;scaler&#39;], [&#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;]]
+  Oil      : savgol → scaler
+             R²=0.976, RMSE=0.0274, RPD=6.5
+             fold chains: [[&#39;savgol&#39;, &#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;], [&#39;detrend&#39;, &#39;robust_scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;]]
+  Protein  : msc → scaler
+             R²=0.963, RMSE=0.0949, RPD=5.3
+             fold chains: [[&#39;msc&#39;, &#39;scaler&#39;], [&#39;snv&#39;, &#39;scaler&#39;], [&#39;robust_scaler&#39;, &#39;meancn&#39;], [&#39;robust_scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;]]
+  Starch   : savgol → scaler
+             R²=0.989, RMSE=0.0841, RPD=9.8
+             fold chains: [[&#39;savgol&#39;, &#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;], [&#39;scaler&#39;], [&#39;savgol&#39;, &#39;scaler&#39;]]
+</pre></div></div>
+</div>
+</section>
+<section id="4.-Short-live-demo-on-one-constituent-(Protein)">
+<h2>4. Short live demo on one constituent (Protein)<a class="headerlink" href="#4.-Short-live-demo-on-one-constituent-(Protein)" title="Link to this heading">#</a></h2>
+<p>A reduced search for interactive use. For paper numbers use the precomputed nested-CV results.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>component = &quot;Protein&quot;
+y = Y[:, COMPONENTS.index(component)]
+groups = np.arange(len(y))
+
+# Hold out 25% for a quick illustration (not the nested-CV paper protocol)
+from sklearn.model_selection import GroupShuffleSplit
+tr, te = next(GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=21).split(X, y, groups))
+
+opt = PipelineOptimizer(
+    X_train=X[tr], y_train=y[tr],
+    X_test=X[te], y_test=y[te],
+    groups=groups[tr],
+    preprocessing_steps=[&quot;snv&quot;, &quot;msc&quot;, &quot;savgol&quot;, &quot;detrend&quot;, &quot;scaler&quot;, &quot;robust_scaler&quot;, &quot;meancn&quot;],
+    cv_method=&quot;group_kfold&quot;,
+    n_splits=3,
+    max_pipeline_length=2,
+    allowed_preprocess_combinations=[1, 2],
+    random_state=42,
+    log_level=&quot;WARNING&quot;,
+)
+best_params, best_pipeline = opt.bayesian_optimize(init_points=5, n_iter=15)
+preds, rmse, r2 = opt.get_best_pipeline_predictions(best_pipeline)
+print(&quot;Selected:&quot;, &quot; → &quot;.join(s for s, _ in best_pipeline.steps[:-1]))
+print(f&quot;Held-out {component}: RMSE={rmse:.4f}, R²={r2:.4f}&quot;)
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+|   iter    |  target   |  als_lam  |   als_p   | als_niter | savgol... | savgol... | savgol... | detren... | detren... | emsc_o... | global... | lsnv_win  |  rnv_lp   |  rnv_up   | pca_n_... | rs_qua... | rs_qua... | rs_wit... | rs_wit... | minmax... | minmax... | power_... | power_... | quanti... | quanti... | ica_n_... | kpca_n... | kpca_k... | kpca_g... | lle_n_... | lle_n_... |   skb_k   | fa_n_c... | fa_lin... | rbf_n_... | rbf_gamma | pipeli... |
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| 1         | -0.217823 | 37516.557 | 0.2857071 | 39.279757 | 10.591950 | 1.6240745 | 0.4679835 | 0.0580836 | 4.4647045 | 3.4044600 | 7.3726532 | 7.1235069 | 19.548647 | 90.811066 | 22.809232 | 7.7273745 | 74.585112 | 0.3042422 | 0.5247564 | 0.1727780 | 0.7164916 | 0.6118528 | 0.1394938 | 65.507483 | 0.3663618 | 23.891359 | 39.688446 | 0.7966983 | 5.1428301 | 18.587607 | 6.1612603 | 61.539395 | 18.711364 | 0.1945042 | 190.28825 | 0.9656664 | 20.209933 |
+| <span class="ansi-magenta-fg">2        </span> | <span class="ansi-magenta-fg">-0.118387</span> | <span class="ansi-magenta-fg">30530.915</span> | <span class="ansi-magenta-fg">0.0383249</span> | <span class="ansi-magenta-fg">37.369321</span> | <span class="ansi-magenta-fg">9.6409149</span> | <span class="ansi-magenta-fg">1.4881529</span> | <span class="ansi-magenta-fg">1.4855307</span> | <span class="ansi-magenta-fg">0.0343885</span> | <span class="ansi-magenta-fg">4.6372816</span> | <span class="ansi-magenta-fg">2.0351199</span> | <span class="ansi-magenta-fg">6.9627005</span> | <span class="ansi-magenta-fg">8.8702664</span> | <span class="ansi-magenta-fg">12.801020</span> | <span class="ansi-magenta-fg">83.667756</span> | <span class="ansi-magenta-fg">20.115736</span> | <span class="ansi-magenta-fg">19.543769</span> | <span class="ansi-magenta-fg">89.378320</span> | <span class="ansi-magenta-fg">0.9394989</span> | <span class="ansi-magenta-fg">0.8948273</span> | <span class="ansi-magenta-fg">0.2391599</span> | <span class="ansi-magenta-fg">0.9687496</span> | <span class="ansi-magenta-fg">0.0884925</span> | <span class="ansi-magenta-fg">0.1959828</span> | <span class="ansi-magenta-fg">18.593184</span> | <span class="ansi-magenta-fg">0.3253303</span> | <span class="ansi-magenta-fg">20.656509</span> | <span class="ansi-magenta-fg">15.024753</span> | <span class="ansi-magenta-fg">3.3066626</span> | <span class="ansi-magenta-fg">3.5681765</span> | <span class="ansi-magenta-fg">9.8661662</span> | <span class="ansi-magenta-fg">18.567402</span> | <span class="ansi-magenta-fg">15.810574</span> | <span class="ansi-magenta-fg">80.615304</span> | <span class="ansi-magenta-fg">0.2229064</span> | <span class="ansi-magenta-fg">197.50851</span> | <span class="ansi-magenta-fg">0.7724725</span> | <span class="ansi-magenta-fg">4.9678920</span> |
+| 3         | -0.217784 | 651.65950 | 0.2464838 | 38.274293 | 11.374043 | 4.0850813 | 0.2221339 | 0.3584657 | 1.4634762 | 4.4524137 | 6.6096831 | 8.9853881 | 5.9533752 | 77.774558 | 33.867965 | 15.944092 | 85.938936 | 0.8872127 | 0.4722149 | 0.0478376 | 0.8852979 | 0.7607850 | 0.5612771 | 156.48376 | 0.4937955 | 27.091175 | 22.521968 | 0.1014223 | 1.0798063 | 2.8800171 | 20.910260 | 32.806886 | 51.839927 | 2.7136237 | 57.365523 | 0.4109725 | 18.888778 |
+| 4         | -0.128378 | 22956.936 | 0.0323241 | 21.590058 | 7.9673277 | 4.7187906 | 2.4243611 | 0.6334037 | 4.4858423 | 4.2146883 | 2.6791305 | 12.355353 | 13.090133 | 90.186003 | 89.816947 | 9.7700521 | 72.751298 | 0.2279351 | 0.4271077 | 0.3272059 | 0.9442922 | 0.0069521 | 0.5107473 | 89.308090 | 0.2221078 | 7.7535376 | 18.205528 | 3.7622097 | 3.2327061 | 16.526137 | 22.575473 | 37.635701 | 97.234644 | 2.8777174 | 57.838636 | 0.4977512 | 7.5219577 |
+| 5         | -0.212147 | 28555.565 | 0.0206972 | 34.382573 | 10.016074 | 1.2059150 | 0.8359393 | 0.9082658 | 1.9582475 | 1.5795794 | 5.4050748 | 12.913902 | 8.6308290 | 86.803388 | 76.638722 | 8.5645631 | 88.205408 | 0.3677831 | 0.6323058 | 0.2534118 | 0.8143098 | 0.0902897 | 0.8353024 | 70.948212 | 0.1865185 | 3.9572067 | 30.362861 | 2.7034818 | 0.1668617 | 16.338605 | 10.662394 | 65.226933 | 19.087910 | 2.0659038 | 83.479715 | 0.9367932 | 3.4380236 |
+| 6         | -0.133692 | 66032.406 | 0.1534903 | 19.372764 | 9.3918661 | 4.8684740 | 2.1052207 | 0.8475333 | 4.0728043 | 1.3122712 | 8.4906219 | 11.316496 | 14.718317 | 75.721621 | 22.234906 | 12.681580 | 86.114857 | 0.0073249 | 0.9438948 | 0.1130865 | 0.7581971 | 0.8603996 | 0.4619540 | 129.39196 | 0.9200338 | 40.379079 | 41.101876 | 3.9245586 | 7.4256003 | 9.3097008 | 25.137096 | 4.1787315 | 89.810840 | 1.7464904 | 91.333266 | 0.8952873 | 11.393923 |
+| 7         | -0.479819 | 70264.575 | 0.1463862 | 16.222442 | 8.2036242 | 1.5677439 | 1.3177253 | 0.1534522 | 2.2505267 | 2.5206960 | 8.3861071 | 8.5491592 | 5.7405904 | 81.743264 | 84.070102 | 10.661843 | 77.253459 | 0.4770757 | 0.3484341 | 0.2824022 | 0.6217481 | 0.0627184 | 0.7140648 | 101.59952 | 0.2117297 | 20.560554 | 48.555231 | 1.4943151 | 1.1619394 | 10.747585 | 18.474039 | 75.535467 | 11.910267 | 1.0707840 | 71.585879 | 0.4952237 | 19.129795 |
+| <span class="ansi-magenta-fg">8        </span> | <span class="ansi-magenta-fg">-0.116378</span> | <span class="ansi-magenta-fg">30255.620</span> | <span class="ansi-magenta-fg">0.2078776</span> | <span class="ansi-magenta-fg">20.646936</span> | <span class="ansi-magenta-fg">10.395735</span> | <span class="ansi-magenta-fg">2.4424105</span> | <span class="ansi-magenta-fg">1.1708515</span> | <span class="ansi-magenta-fg">0.2545387</span> | <span class="ansi-magenta-fg">4.2555948</span> | <span class="ansi-magenta-fg">3.2308449</span> | <span class="ansi-magenta-fg">9.7117614</span> | <span class="ansi-magenta-fg">11.854586</span> | <span class="ansi-magenta-fg">17.375487</span> | <span class="ansi-magenta-fg">86.498441</span> | <span class="ansi-magenta-fg">32.554271</span> | <span class="ansi-magenta-fg">8.0206022</span> | <span class="ansi-magenta-fg">81.123641</span> | <span class="ansi-magenta-fg">0.1590969</span> | <span class="ansi-magenta-fg">0.8967316</span> | <span class="ansi-magenta-fg">0.2602615</span> | <span class="ansi-magenta-fg">0.8541911</span> | <span class="ansi-magenta-fg">0.3040710</span> | <span class="ansi-magenta-fg">0.9573846</span> | <span class="ansi-magenta-fg">61.416979</span> | <span class="ansi-magenta-fg">0.8776918</span> | <span class="ansi-magenta-fg">18.085969</span> | <span class="ansi-magenta-fg">19.870667</span> | <span class="ansi-magenta-fg">2.9908825</span> | <span class="ansi-magenta-fg">2.1974843</span> | <span class="ansi-magenta-fg">28.868375</span> | <span class="ansi-magenta-fg">21.369140</span> | <span class="ansi-magenta-fg">43.048389</span> | <span class="ansi-magenta-fg">18.566889</span> | <span class="ansi-magenta-fg">1.4495027</span> | <span class="ansi-magenta-fg">11.240390</span> | <span class="ansi-magenta-fg">0.6687759</span> | <span class="ansi-magenta-fg">5.4659455</span> |
+| 9         | -0.133692 | 63166.388 | 0.2254054 | 20.414514 | 12.944674 | 4.4730258 | 2.0523634 | 0.1406309 | 4.8948974 | 3.7789288 | 1.3503626 | 11.662062 | 10.169010 | 90.890475 | 48.929198 | 11.856951 | 75.858269 | 0.7269129 | 0.0416676 | 0.3666146 | 0.8896728 | 0.0663736 | 0.4501872 | 121.64718 | 0.5595609 | 49.031365 | 23.924664 | 2.7865018 | 8.7806490 | 19.962372 | 12.410468 | 30.918473 | 83.437837 | 2.9057455 | 86.092320 | 0.3777884 | 0.2402107 |
+| 10        | -0.222945 | 19640.009 | 0.0763061 | 14.569465 | 11.676909 | 3.0724912 | 0.7563927 | 0.5905502 | 4.3750800 | 2.8987283 | 8.1513438 | 11.492509 | 5.7816673 | 94.793112 | 34.031187 | 6.5086621 | 73.489322 | 0.9293617 | 0.4101538 | 0.3768426 | 0.6296622 | 0.3815917 | 0.5025715 | 93.598820 | 0.5548082 | 24.811948 | 29.493619 | 0.4969284 | 3.6725918 | 10.717578 | 12.700836 | 54.285955 | 58.703727 | 0.6551990 | 108.92615 | 0.5881437 | 15.336230 |
+| 11        | -0.222945 | 59602.447 | 0.1832453 | 49.463679 | 8.2334226 | 4.4238812 | 2.2461747 | 0.4777150 | 3.2782620 | 3.8857995 | 7.9423397 | 10.299408 | 5.1100770 | 80.473942 | 60.186141 | 5.9705777 | 81.622374 | 0.2823952 | 0.3919237 | 0.0836329 | 0.6376727 | 0.5038182 | 0.4492115 | 177.25364 | 0.7067916 | 2.7935243 | 47.280192 | 1.2864158 | 0.9097892 | 4.9070376 | 24.963034 | 32.202929 | 89.690925 | 1.8400320 | 124.49223 | 0.0907908 | 16.209967 |
+| 12        | -0.218389 | 33547.968 | 0.1095620 | 11.680600 | 7.2253497 | 3.0368190 | 0.4716593 | 0.1165907 | 2.8556461 | 3.9288370 | 7.0239785 | 9.9247705 | 14.872598 | 75.546669 | 39.400834 | 16.873785 | 94.523525 | 0.9756331 | 0.0448076 | 0.0909731 | 0.6887614 | 0.6360788 | 0.4189552 | 146.13385 | 0.1297976 | 16.498289 | 28.274270 | 0.4196946 | 8.6579173 | 18.215067 | 24.569194 | 84.319034 | 33.521211 | 0.5868825 | 22.040107 | 0.0895692 | 3.4542642 |
+| 13        | -0.218389 | 99970.336 | 0.0684110 | 38.410683 | 12.225564 | 2.8283313 | 2.7041512 | 0.4092512 | 2.6940452 | 2.9556176 | 2.0581045 | 8.8564253 | 10.562342 | 70.173493 | 93.349975 | 8.3486594 | 77.975566 | 0.9098714 | 0.4871407 | 0.0842631 | 0.6126203 | 0.4941220 | 0.0568056 | 104.46717 | 0.4120169 | 6.3569595 | 26.154265 | 1.6964551 | 1.9613560 | 18.478447 | 25.772682 | 82.973653 | 46.574852 | 0.1495457 | 72.456104 | 0.0656576 | 21.932391 |
+| 14        | -0.262608 | 86428.568 | 0.1577471 | 30.440472 | 10.633251 | 3.2658044 | 1.4563159 | 0.9882111 | 3.5252109 | 3.1170395 | 7.3365793 | 8.4067481 | 14.439205 | 80.123382 | 2.1020309 | 12.089221 | 75.105098 | 0.0390499 | 0.4673099 | 0.1152725 | 0.8164006 | 0.8247846 | 0.7678178 | 80.125451 | 0.5743550 | 40.921831 | 32.830801 | 3.4530926 | 6.0566813 | 16.727146 | 8.4435830 | 29.724119 | 24.043129 | 0.6214628 | 166.74771 | 0.3605150 | 22.638273 |
+| 15        | -0.510213 | 24925.247 | 0.1537918 | 16.386417 | 9.3572460 | 2.0143380 | 2.6283959 | 0.6604568 | 3.5835486 | 4.1217734 | 5.3574456 | 11.373255 | 14.678420 | 74.351807 | 11.711918 | 10.768553 | 75.128909 | 0.1600187 | 0.5786991 | 0.0682854 | 0.9733103 | 0.1864013 | 0.3722317 | 161.90759 | 0.9266349 | 19.459947 | 15.913698 | 2.0147887 | 6.6510915 | 18.453931 | 13.707465 | 91.793080 | 41.277091 | 2.9380205 | 188.92003 | 0.8420262 | 17.363855 |
+| 16        | -0.222945 | 63404.671 | 0.0906472 | 31.113466 | 7.8370713 | 2.1935791 | 2.6824965 | 0.3416511 | 3.3423515 | 3.9308123 | 9.4276512 | 12.562236 | 12.408471 | 86.499601 | 61.127291 | 11.815775 | 82.620215 | 0.2070783 | 0.8623520 | 0.1973593 | 0.7000909 | 0.1608821 | 0.5653638 | 93.256152 | 0.1741060 | 5.6206504 | 11.536676 | 0.3432272 | 8.7461865 | 8.7061208 | 26.824351 | 52.632089 | 65.559237 | 2.6969423 | 12.423571 | 0.9213772 | 16.189062 |
+| 17        | -0.480268 | 3566.3959 | 0.2473885 | 20.105816 | 12.599757 | 2.1451067 | 1.1834892 | 0.1606253 | 2.1338226 | 1.1895565 | 7.8452337 | 12.350337 | 5.4988647 | 77.856763 | 88.443560 | 17.183340 | 85.008691 | 0.4480438 | 0.8753708 | 0.2023456 | 0.9354244 | 0.2463339 | 0.9898504 | 157.49822 | 0.1367838 | 6.0409187 | 35.170552 | 0.2254529 | 3.3654175 | 4.5905862 | 27.521872 | 76.469037 | 65.544461 | 2.1390455 | 112.43511 | 0.7276474 | 17.084816 |
+| 18        | -0.218389 | 62461.271 | 0.0415871 | 30.000933 | 12.074756 | 3.1853828 | 1.3552415 | 0.0095921 | 3.6422835 | 4.5941490 | 5.3442416 | 12.059416 | 8.9477956 | 78.185604 | 81.857516 | 12.794667 | 90.873993 | 0.4482622 | 0.3135758 | 0.3314388 | 0.8200934 | 0.0978463 | 0.3567129 | 99.208866 | 0.4476656 | 33.139619 | 22.802518 | 1.7528271 | 6.9910649 | 10.115277 | 12.394696 | 82.953963 | 5.7825902 | 1.6861761 | 196.06156 | 0.1972338 | 22.724267 |
+| 19        | -0.509043 | 31983.253 | 0.1714929 | 29.223740 | 11.739988 | 3.7990912 | 1.6504482 | 0.9267783 | 2.7855197 | 4.1119995 | 4.0538643 | 9.6699210 | 16.908290 | 84.557237 | 46.688427 | 5.7621047 | 86.566238 | 0.9876870 | 0.5551083 | 0.1060758 | 0.7939727 | 0.9850980 | 0.0138236 | 73.074955 | 0.2476467 | 14.872908 | 19.951674 | 0.4854120 | 1.9419565 | 12.388767 | 20.639497 | 59.867959 | 59.014550 | 1.3477162 | 70.952052 | 0.0481024 | 11.846206 |
+| 20        | -0.217795 | 67663.839 | 0.2706704 | 19.983499 | 10.462850 | 3.7987775 | 2.6595255 | 0.6373258 | 4.0388613 | 1.9763193 | 7.1509102 | 11.131235 | 6.7357542 | 73.419121 | 75.620057 | 9.7867752 | 89.561942 | 0.2325495 | 0.1715793 | 0.1290947 | 0.9586915 | 0.0729940 | 0.6183777 | 141.98301 | 0.9000498 | 41.442534 | 38.009221 | 1.6558564 | 5.0187019 | 25.183411 | 22.216205 | 75.685320 | 5.7018358 | 0.0547500 | 112.07361 | 0.7734399 | 24.630730 |
+=========================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Selected: robust_scaler
+Held-out Protein: RMSE=0.0995, R²=0.9536
+</pre></div></div>
+</div>
+</section>
+<section id="5.-Preprocessing-comparison-—-full-spectra,-inverted-x-axis">
+<h2>5. Preprocessing comparison — full spectra, inverted x-axis<a class="headerlink" href="#5.-Preprocessing-comparison-—-full-spectra,-inverted-x-axis" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from sklearn.pipeline import Pipeline
+
+prep = Pipeline(best_pipeline.steps[:-1])
+X_prep = np.asarray(prep.fit_transform(X))
+chain = &quot; → &quot;.join(s for s, _ in best_pipeline.steps[:-1])
+
+SpectroPrepPlotter.plot_preprocessing_comparison(
+    wavelengths,
+    X,
+    {f&quot;Optimal preprocessing ({chain})&quot;: X_prep},
+    sample_indices=None,  # all 80 spectra
+    title=f&quot;Corn NIR (m5) — {component}: raw vs preprocessing&quot;,
+    xlabel=&quot;Wavelength (nm)&quot;,
+    alpha=0.3,
+    invert_xaxis=True,
+    figsize=(12, 8),
+)
+plt.show()
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_10_0.png" src="../_images/notebooks_corn_benchmark_10_0.png" />
+</div>
+</div>
+</section>
+<section id="6.-Predicted-vs-reference-+-optimisation-diagnostics">
+<h2>6. Predicted vs reference + optimisation diagnostics<a class="headerlink" href="#6.-Predicted-vs-reference-+-optimisation-diagnostics" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>SpectroPrepPlotter.plot_prediction_scatter(
+    y[te], preds,
+    title=f&quot;Corn NIR (m5) — {component} (held-out demo)&quot;,
+    xlabel=f&quot;Reference {component}&quot;,
+    ylabel=f&quot;Predicted {component}&quot;,
+)
+SpectroPrepPlotter.plot_optimization_progress(opt)
+SpectroPrepPlotter.plot_optimization_results(opt, top_n=5)
+plt.show()
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_12_0.png" src="../_images/notebooks_corn_benchmark_12_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_12_1.png" src="../_images/notebooks_corn_benchmark_12_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_12_2.png" src="../_images/notebooks_corn_benchmark_12_2.png" />
+</div>
+</div>
+</section>
+<section id="7.-Paper-figures-(nested-CV,-all-constituents)">
+<h2>7. Paper figures (nested-CV, all constituents)<a class="headerlink" href="#7.-Paper-figures-(nested-CV,-all-constituents)" title="Link to this heading">#</a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">run_corn_benchmark.py</span></code> has been executed, display the saved prediction and preprocessing figures for every constituent.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from IPython.display import Image, display, Markdown
+
+fig_dir = EXAMPLES / &quot;corn_results&quot; / &quot;figures&quot;
+if fig_dir.exists():
+    display(Markdown(&quot;### Raw spectra&quot;))
+    display(Image(filename=str(fig_dir / &quot;spectra_raw_full.png&quot;)))
+    for name in COMPONENTS:
+        display(Markdown(f&quot;### {name}&quot;))
+        pred = fig_dir / f&quot;prediction_{name.lower()}.png&quot;
+        prep = fig_dir / f&quot;spectra_prep_{name.lower()}.png&quot;
+        if pred.exists():
+            display(Image(filename=str(pred)))
+        if prep.exists():
+            display(Image(filename=str(prep)))
+else:
+    print(&quot;Figures not found — run examples/run_corn_benchmark.py first.&quot;)
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<section id="Raw-spectra">
+<h3>Raw spectra<a class="headerlink" href="#Raw-spectra" title="Link to this heading">#</a></h3>
+</section>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_1.png" src="../_images/notebooks_corn_benchmark_14_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<section id="Moisture">
+<h3>Moisture<a class="headerlink" href="#Moisture" title="Link to this heading">#</a></h3>
+</section>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_3.png" src="../_images/notebooks_corn_benchmark_14_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_4.png" src="../_images/notebooks_corn_benchmark_14_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<section id="Oil">
+<h3>Oil<a class="headerlink" href="#Oil" title="Link to this heading">#</a></h3>
+</section>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_6.png" src="../_images/notebooks_corn_benchmark_14_6.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_7.png" src="../_images/notebooks_corn_benchmark_14_7.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<section id="Protein">
+<h3>Protein<a class="headerlink" href="#Protein" title="Link to this heading">#</a></h3>
+</section>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_9.png" src="../_images/notebooks_corn_benchmark_14_9.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_10.png" src="../_images/notebooks_corn_benchmark_14_10.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<section id="Starch">
+<h3>Starch<a class="headerlink" href="#Starch" title="Link to this heading">#</a></h3>
+</section>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_12.png" src="../_images/notebooks_corn_benchmark_14_12.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_corn_benchmark_14_13.png" src="../_images/notebooks_corn_benchmark_14_13.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../getting_started.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Getting started</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tutorial.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial (legacy milk example)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Load-data">1. Load data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Raw-spectra-(full-set,-inverted-wavelength-axis)">2. Raw spectra (full set, inverted wavelength axis)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Load-tracked-optimal-preprocessing-(from-full-benchmark)">3. Load tracked optimal preprocessing (from full benchmark)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Short-live-demo-on-one-constituent-(Protein)">4. Short live demo on one constituent (Protein)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Preprocessing-comparison-—-full-spectra,-inverted-x-axis">5. Preprocessing comparison — full spectra, inverted x-axis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Predicted-vs-reference-+-optimisation-diagnostics">6. Predicted vs reference + optimisation diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Paper-figures-(nested-CV,-all-constituents)">7. Paper figures (nested-CV, all constituents)</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/corn_benchmark.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Habeeb Babatunde.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

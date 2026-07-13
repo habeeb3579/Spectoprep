@@ -1,0 +1,20 @@
+{
+    "api/cli": 0.227,
+    "api/index": 0.002,
+    "api/logging": 0.018,
+    "api/modelling": 0.339,
+    "api/optimizer": 0.713,
+    "api/preprocessing": 0.493,
+    "api/visualization": 0.134,
+    "authors": 0.004,
+    "contributing": 0.013,
+    "getting_started": 0.008,
+    "history": 0.007,
+    "index": 0.008,
+    "installation": 0.007,
+    "modules": 0.008,
+    "notebooks/corn_benchmark": 1.026,
+    "notebooks/tutorial": 6.294,
+    "readme": 0.017,
+    "usage": 0.016
+}

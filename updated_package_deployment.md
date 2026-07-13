@@ -7,12 +7,15 @@
 | **PyPI** | Automated in `release.yml` on `v*` tags (Trusted Publishing) |
 | **Conda (`habeebest`)** | Automated in `release.yml`: `conda build` + `anaconda upload` |
 | **CI** | Pip matrix in `ci.yml` (lint + OS × Python tests), plus conda env smoke via `ci/conda-environment.yml` |
+| **Docs (GitHub Pages)** | `docs-pages.yml` builds Sphinx and deploys to the `gh-pages` branch on every push to `main` |
+| **Docs (Read the Docs)** | Rebuilds via RTD GitHub integration (`.readthedocs.yaml`) on push |
 
 ## Normal development
 
 1. Branch off `main` / `master`, open a PR.
 2. CI runs automatically: ruff, mypy, pytest (pip), plus conda env smoke on Ubuntu.
-3. Merge when green.
+3. Docs are built on the PR (`docs-pages.yml`); deploy to github.io happens only after merge to `main`.
+4. Merge when green.
 
 ## Creating a release
 

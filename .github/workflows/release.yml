@@ -73,7 +73,9 @@ jobs:
           # The setup-miniconda "build" env may not ship pip; install via conda.
           conda install -y -c conda-forge pip anaconda-client
           test -x "${CONDA_PREFIX}/bin/anaconda"
-          "${CONDA_PREFIX}/bin/anaconda" --version
+          # anaconda-cli-base plugins hijack `anaconda`; force classic client.
+          export ANACONDA_CLIENT_FORCE_STANDALONE=1
+          "${CONDA_PREFIX}/bin/anaconda" -V
       - name: Build conda package
         run: |
           conda build --version
@@ -84,6 +86,8 @@ jobs:
       - name: Upload to Anaconda.org
         env:
           ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+          # Use classic binstar CLI (supports --token upload), not anaconda-cli-base.
+          ANACONDA_CLIENT_FORCE_STANDALONE: "1"
         run: |
           if [ -z "${ANACONDA_TOKEN}" ]; then
             echo "ANACONDA_TOKEN secret is required to publish to anaconda.org/habeebest."

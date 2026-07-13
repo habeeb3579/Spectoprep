@@ -40,10 +40,26 @@ Merging a PR labeled `version-bump` creates and pushes tag `vX.Y.Z`, which trigg
 | Name | Type | Purpose |
 |------|------|---------|
 | PyPI Trusted Publisher | PyPI project ↔ GitHub `release.yml` / `pypi` environment | Publish without API token |
+| GitHub Environment `pypi` | Repo → Settings → Environments | Must exist; matches OIDC `environment: pypi` |
 | `ANACONDA_TOKEN` | Secret (**required** for conda publish) | Upload to anaconda.org/habeebest |
 | `CODECOV_TOKEN` | Secret (optional) | Coverage uploads |
 | `PROJECT_TOKEN` | Secret (optional) | Issue → Project v2 automation |
 | `PROJECT_ID`, `STATUS_FIELD_ID`, `TODO_OPTION_ID` | Variables (optional) | Project board field IDs |
+
+### PyPI Trusted Publisher (required)
+
+On [pypi.org](https://pypi.org) → project **spectoprep** → **Publishing** → Add a new pending/trusted publisher:
+
+| Field | Value |
+|-------|--------|
+| Owner | `habeeb3579` |
+| Repository | `Spectoprep` |
+| Workflow name | `release.yml` |
+| Environment name | `pypi` |
+
+Those must match the OIDC claims from the workflow (`repo:…:environment:pypi`, `workflow_ref: …/release.yml@…`). A mismatch yields `invalid-publisher`.
+
+Also create a GitHub Environment named **`pypi`** (Settings → Environments) so the job’s `environment: pypi` is valid.
 
 Create an Anaconda.org API token with upload rights for the `habeebest` channel and add it as `ANACONDA_TOKEN` under repository secrets.
 

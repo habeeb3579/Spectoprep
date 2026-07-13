@@ -62,10 +62,14 @@ jobs:
           python-version: "3.12"
           channels: conda-forge
           conda-solver: libmamba
-      - name: Install conda-build tooling
-        run: conda install -y conda-build anaconda-client
+          # conda-build must live in base: modern conda only loads the
+          # ``conda build`` plugin from the base env (not from ``build``).
+          conda-build-version: "*"
+      - name: Install anaconda-client
+        run: conda install -n base -y -c conda-forge anaconda-client
       - name: Build conda package
         run: |
+          conda build --version
           conda build conda-recipe \
             -c conda-forge \
             --noanaconda-upload \

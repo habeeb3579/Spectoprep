@@ -1,0 +1,181 @@
+{
+  "protocol": {
+    "instrument": "m5",
+    "outer_cv": "KFold(n_splits=5, shuffle=True, random_state=42)",
+    "inner_cv": "group_kfold n_splits=3",
+    "init_points": 10,
+    "n_iter": 25,
+    "evaluations_per_outer_fold": 35,
+    "preprocessing_steps": [
+      "snv",
+      "msc",
+      "savgol",
+      "detrend",
+      "scaler",
+      "robust_scaler",
+      "meancn"
+    ]
+  },
+  "constituents": {
+    "Moisture": {
+      "raw": {
+        "r2": 0.9860527602276584,
+        "rmse": 0.044638867907938196,
+        "rpd": 8.520936214546301
+      },
+      "spectoprep": {
+        "r2": 0.9995361324972265,
+        "rmse": 0.008140779888813746,
+        "rpd": 46.72340381733685
+      },
+      "delta_rmse_pct": 81.76302341357976,
+      "fold_pipelines": [
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "scaler"
+        ],
+        [
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ]
+      ],
+      "consensus_pipeline": [
+        "savgol",
+        "scaler"
+      ],
+      "consensus_count": 3,
+      "consensus_note": "selected in 3/5 outer folds"
+    },
+    "Oil": {
+      "raw": {
+        "r2": 0.7858432049969706,
+        "rmse": 0.08141854796360877,
+        "rpd": 2.174530575217999
+      },
+      "spectoprep": {
+        "r2": 0.9757077667954549,
+        "rmse": 0.027421495995582745,
+        "rpd": 6.456508498487481
+      },
+      "delta_rmse_pct": 66.32033279709289,
+      "fold_pipelines": [
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "detrend",
+          "robust_scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ]
+      ],
+      "consensus_pipeline": [
+        "savgol",
+        "scaler"
+      ],
+      "consensus_count": 4,
+      "consensus_note": "selected in 4/5 outer folds"
+    },
+    "Protein": {
+      "raw": {
+        "r2": 0.8680131605900194,
+        "rmse": 0.18001036247748436,
+        "rpd": 2.769913029755996
+      },
+      "spectoprep": {
+        "r2": 0.963280140744804,
+        "rmse": 0.09494731671471973,
+        "rpd": 5.251470665733764
+      },
+      "delta_rmse_pct": 47.25452723501087,
+      "fold_pipelines": [
+        [
+          "msc",
+          "scaler"
+        ],
+        [
+          "snv",
+          "scaler"
+        ],
+        [
+          "robust_scaler",
+          "meancn"
+        ],
+        [
+          "robust_scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ]
+      ],
+      "consensus_pipeline": [
+        "msc",
+        "scaler"
+      ],
+      "consensus_count": 1,
+      "consensus_note": "no majority across folds; listed consensus is first outer-fold chain (see fold_pipelines)"
+    },
+    "Starch": {
+      "raw": {
+        "r2": 0.7643866790916488,
+        "rmse": 0.3958869087407267,
+        "rpd": 2.073153826188302
+      },
+      "spectoprep": {
+        "r2": 0.989375305168309,
+        "rmse": 0.08406775556282847,
+        "rpd": 9.762773540210866
+      },
+      "delta_rmse_pct": 78.76470433684234,
+      "fold_pipelines": [
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ],
+        [
+          "scaler"
+        ],
+        [
+          "savgol",
+          "scaler"
+        ]
+      ],
+      "consensus_pipeline": [
+        "savgol",
+        "scaler"
+      ],
+      "consensus_count": 4,
+      "consensus_note": "selected in 4/5 outer folds"
+    }
+  }
+}

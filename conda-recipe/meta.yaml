@@ -1,0 +1,65 @@
+{% set name = "spectoprep" %}
+{# Keep in sync with src/spectoprep/__init__.py; use conda pre-release form
+   (PEP 440 "1.0.1-alpha" -> "1.0.1.alpha"). release-prep.yml updates this. #}
+{% set version = "1.0.1.alpha" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: ..  # Repository root (local / CI recipe builds)
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv --no-deps"
+  noarch: python
+  entry_points:
+    - spectoprep = spectoprep.cli:app
+
+requirements:
+  host:
+    - python >=3.10
+    - pip
+    - setuptools >=61
+    - wheel
+  run:
+    - python >=3.10
+    - numpy >=1.23
+    - scipy >=1.9
+    - scikit-learn >=1.3
+    - pandas >=1.5
+    - matplotlib-base >=3.6
+    - seaborn >=0.12
+    - bayesian-optimization >=1.4
+    - typer >=0.9
+    - rich >=13.0
+    - structlog >=23.1
+
+test:
+  imports:
+    - spectoprep
+  commands:
+    - python -c "import spectoprep; print(spectoprep.__version__)"
+    - spectoprep version
+    - spectoprep --help
+
+about:
+  home: https://github.com/habeeb3579/spectoprep
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE
+  summary: A comprehensive spectral preprocessing toolkit for chemometrics.
+  description: |
+    SpectoPrep is a spectral preprocessing toolkit for chemometric pipelines,
+    with Bayesian optimization of transform chains and group-aware validation.
+  doc_url: https://spectoprep.readthedocs.io
+  dev_url: https://github.com/habeeb3579/spectoprep
+
+extra:
+  recipe-maintainers:
+    - habeeb3579
+  recipe-notes: |
+    On each ``v*`` tag, ``release.yml`` builds this recipe and uploads to the
+    Anaconda.org channel ``habeebest`` (requires ``ANACONDA_TOKEN``).
+    PyPI is published in the same workflow via Trusted Publishing.

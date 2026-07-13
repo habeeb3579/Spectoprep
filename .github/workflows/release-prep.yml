@@ -1,0 +1,102 @@
+name: Release Prep
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Semantic version part to bump"
+        required: true
+        default: "patch"
+        type: choice
+        options: [patch, minor, major]
+  pull_request:
+    types: [closed]
+    branches: [main, master]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # 1. On manual dispatch: bump the version and open a PR.
+  prepare-bump:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bump version
+        id: bump
+        run: |
+          python - "${{ inputs.version_type }}" <<'PY'
+          import os, re, sys, pathlib
+
+          part = sys.argv[1]
+          init = pathlib.Path("src/spectoprep/__init__.py")
+          text = init.read_text()
+          m = re.search(r'__version__\s*=\s*"([^"]+)"', text)
+          cur = m.group(1)
+          core = cur.split("-")[0].split("a")[0].split("b")[0].split("rc")[0]
+          major, minor, patch = (int(x) for x in core.split(".")[:3])
+          if part == "major":
+              major, minor, patch = major + 1, 0, 0
+          elif part == "minor":
+              minor, patch = minor + 1, 0
+          else:
+              patch += 1
+          new = f"{major}.{minor}.{patch}"
+          # Conda pre-release form uses dots: 1.0.1-alpha -> 1.0.1.alpha
+          conda_ver = new.replace("-", ".", 1) if "-" in new else new
+
+          init.write_text(text.replace(f'"{cur}"', f'"{new}"', 1))
+
+          # pyproject.toml derives version from __init__.py; sync conda recipe.
+          meta = pathlib.Path("conda-recipe/meta.yaml")
+          if meta.exists():
+              meta.write_text(
+                  re.sub(
+                      r'(\{% set version = ")[^"]+(" %\})',
+                      rf"\g<1>{conda_ver}\2",
+                      meta.read_text(),
+                      count=1,
+                  )
+              )
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"new_version={new}\n")
+          print(f"{cur} -> {new} (conda recipe: {conda_ver})")
+          PY
+      - name: Open version-bump PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: bump version to ${{ steps.bump.outputs.new_version }}"
+          title: "Release v${{ steps.bump.outputs.new_version }}"
+          body: "Automated version bump to v${{ steps.bump.outputs.new_version }}."
+          branch: "release/v${{ steps.bump.outputs.new_version }}"
+          labels: version-bump
+
+  # 2. When a version-bump PR is merged: create and push the release tag,
+  #    which triggers release.yml (PyPI + GitHub Release).
+  tag-release:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'version-bump')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Read version
+        id: ver
+        run: |
+          version=$(grep -oE '__version__ = "[^"]+"' src/spectoprep/__init__.py | grep -oE '[0-9]+\.[0-9]+\.[0-9]+[^"]*')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.ver.outputs.version }}" -m "Release v${{ steps.ver.outputs.version }}"
+          git push origin "v${{ steps.ver.outputs.version }}"

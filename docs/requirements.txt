@@ -1,0 +1,18 @@
+# Documentation build requirements (used by local `pip install -r` and mirrors)
+# Prefer: pip install -e ".[docs]"
+
+sphinx>=7.0
+myst-parser
+pydata-sphinx-theme
+nbsphinx
+pandoc
+numpy
+scipy
+scikit-learn
+pandas
+matplotlib
+seaborn
+bayesian-optimization
+typer
+rich
+structlog

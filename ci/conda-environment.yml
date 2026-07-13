@@ -1,0 +1,29 @@
+# Conda env for local development and the conda CI smoke job.
+# Primary CI (lint/test matrix) uses pip; this file mirrors package deps for conda users.
+name: spectoprep-ci
+channels:
+  - conda-forge
+dependencies:
+  - python >=3.10,<3.14
+  - pip
+  - setuptools >=61
+  - wheel
+  # Runtime (aligned with pyproject.toml / conda-recipe/meta.yaml)
+  - numpy >=1.23
+  - scipy >=1.9
+  - scikit-learn >=1.3
+  - pandas >=1.5
+  - matplotlib-base >=3.6
+  - seaborn >=0.12
+  - bayesian-optimization >=1.4
+  - typer >=0.9
+  - rich >=13.0
+  - structlog >=23.1
+  # Tooling (aligned with [project.optional-dependencies] test/lint)
+  - pytest >=7
+  - pytest-cov >=4
+  - coverage >=7
+  - ruff >=0.4
+  - mypy >=1.5
+  - pip:
+      - -e .

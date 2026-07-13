@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this package, please cite the Foods paper below. A SoftwareX software-description paper is in preparation; CITATION.cff will be updated when it has a DOI."
+title: "SpectoPrep"
+authors:
+  - family-names: Babatunde
+    given-names: Habeeb Abolaji
+  - family-names: McDougal
+    given-names: Owen M
+  - family-names: Andersen
+    given-names: Timothy
+version: "1.0.1-alpha"
+date-released: 2025-09-01
+url: "https://github.com/habeeb3579/Spectoprep"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Babatunde
+      given-names: Habeeb Abolaji
+    - family-names: McDougal
+      given-names: Owen M
+    - family-names: Andersen
+      given-names: Timothy
+  title: "Automated Spectral Preprocessing via Bayesian Optimization for Chemometric Analysis of Milk Constituents"
+  journal: "Foods"
+  volume: "14"
+  number: "17"
+  pages: "2996"
+  year: 2025
+  publisher: "MDPI"
+  doi: "10.3390/foods14172996"

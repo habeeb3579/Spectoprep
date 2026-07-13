@@ -75,6 +75,7 @@ Ready to contribute? Here's how to set up `spectoprep` for local development.
 
     $ conda env create -f ci/conda-environment.yml
     $ conda activate spectoprep-ci
+    $ python -m pip install -e .
 
 4. Create a branch for local development::
 

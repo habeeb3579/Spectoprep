@@ -25,5 +25,5 @@ dependencies:
   - coverage >=7
   - ruff >=0.4
   - mypy >=1.5
-  - pip:
-      - -e .
+  # Editable install is done in a follow-up step (path is relative to this
+  # file's directory, so ``-e .`` would target ci/ instead of the repo root).

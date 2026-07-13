@@ -61,9 +61,7 @@ def test_set_style_changes_rcparams():
 
 
 def test_plot_spectra_invert_xaxis(wavenumbers, spectra):
-    fig, ax = SpectroPrepPlotter.plot_spectra(
-        wavenumbers, spectra, invert_xaxis=True
-    )
+    fig, ax = SpectroPrepPlotter.plot_spectra(wavenumbers, spectra, invert_xaxis=True)
     assert ax.xaxis_inverted()
 
 

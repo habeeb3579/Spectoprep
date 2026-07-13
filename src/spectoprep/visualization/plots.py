@@ -219,9 +219,7 @@ class SpectroPrepPlotter:
             ax = fig.add_subplot(gs[i], sharex=ax_orig)
             for j, idx in enumerate(sample_indices):
                 label = f"Sample {idx + 1}" if show_legend else None
-                ax.plot(
-                    wavenumbers, processed[idx], color=colors[j], alpha=alpha, label=label
-                )
+                ax.plot(wavenumbers, processed[idx], color=colors[j], alpha=alpha, label=label)
             ax.set_title(f"{method_name}", fontsize=12)
             if i == n_methods - 1:
                 ax.set_xlabel(xlabel, fontsize=12)

@@ -77,14 +77,17 @@ jobs:
           branch: "release/v${{ steps.bump.outputs.new_version }}"
           labels: version-bump
 
-  # 2. When a version-bump PR is merged: create and push the release tag,
-  #    which triggers release.yml (PyPI + GitHub Release).
+  # 2. When a version-bump PR is merged: create and push the release tag.
+  #    Note: a tag push using GITHUB_TOKEN will NOT start release.yml (GitHub
+  #    blocks workflow→workflow triggers via GITHUB_TOKEN). Job 3 calls it.
   tag-release:
     if: >
       github.event_name == 'pull_request' &&
       github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'version-bump')
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,5 +101,25 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ steps.ver.outputs.version }}" -m "Release v${{ steps.ver.outputs.version }}"
-          git push origin "v${{ steps.ver.outputs.version }}"
+          tag="v${{ steps.ver.outputs.version }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists locally; skipping create."
+          else
+            git tag -a "$tag" -m "Release $tag"
+          fi
+          # Ignore "already exists" on re-runs.
+          git push origin "$tag" || true
+
+  # 3. Run the Release workflow in-process (workflow_call). This is what
+  #    actually publishes PyPI/conda and creates the GitHub Release.
+  trigger-release:
+    needs: tag-release
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'version-bump')
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    permissions:
+      contents: write
+      id-token: write

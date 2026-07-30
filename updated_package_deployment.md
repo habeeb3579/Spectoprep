@@ -27,16 +27,26 @@
 
 ### Step 2 — Merge the version PR
 
-Merging a PR labeled `version-bump` creates and pushes tag `vX.Y.Z`, which triggers **Release**.
+Merging a PR labeled `version-bump`:
+
+1. Creates/pushes tag `vX.Y.Z`
+2. **Calls** `release.yml` via `workflow_call` (required: a tag push made with
+   `GITHUB_TOKEN` does **not** start other workflows)
 
 ### Step 3 — Automated PyPI + Conda + GitHub Release
 
-`release.yml` on the tag:
+`release.yml` (on tag push, manual dispatch, or call from Release Prep):
 
 1. Builds sdist and wheel, runs `twine check`
 2. Publishes to PyPI via OIDC Trusted Publishing (`environment: pypi`)
 3. Builds `conda-recipe/` and uploads to Anaconda.org channel **`habeebest`**
 4. Creates a GitHub Release attaching both PyPI and conda artifacts
+
+If a tag exists but no GitHub Release appeared, run **Release** manually:
+
+```bash
+gh workflow run release.yml --ref v1.0.4
+```
 
 ## Required GitHub configuration
 

@@ -4,6 +4,9 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+  # Called from release-prep after tagging. Required because tags pushed with
+  # GITHUB_TOKEN do not trigger other workflows (GitHub recursion guard).
+  workflow_call:
 
 concurrency:
   group: release-${{ github.ref }}

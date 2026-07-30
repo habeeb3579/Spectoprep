@@ -237,6 +237,80 @@ class SpectroPrepPlotter:
         return fig
 
     @staticmethod
+    def plot_preprocessing_grid(
+        wavenumbers: np.ndarray,
+        panels: list[tuple[str, np.ndarray]],
+        *,
+        ncols: int = 2,
+        figsize: tuple[int, int] = (7, 9),
+        suptitle: str | None = None,
+        xlabel: str = "Wavenumber (cm$^{-1}$)",
+        ylabel: str = "Absorbance",
+        alpha: float = 0.35,
+        color_map: str = "viridis",
+        xticks: list[float] | None = None,
+        save_path: str | None = None,
+    ):
+        """
+        Plot multiple preprocessing views in a regular column grid.
+
+        Each panel shows all samples for one preprocessing recipe (or raw spectra).
+        """
+        if not panels:
+            raise ValueError("panels must contain at least one (title, spectra) pair")
+
+        n_panels = len(panels)
+        nrows = int(np.ceil(n_panels / ncols))
+        fig, axes = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)
+        axes_grid = np.atleast_2d(axes)
+
+        cmap = plt.get_cmap(color_map)
+        for idx, (panel_title, spectra) in enumerate(panels):
+            row, col = divmod(idx, ncols)
+            ax = axes_grid[row, col]
+            data = np.asarray(spectra, dtype=float)
+            if data.ndim == 1:
+                data = data.reshape(1, -1)
+            n_spectra = data.shape[0]
+            colors = [cmap(i / max(1, n_spectra - 1)) for i in range(n_spectra)]
+            for i, spectrum in enumerate(data):
+                ax.plot(wavenumbers, spectrum, color=colors[i], alpha=alpha, linewidth=0.8)
+            ax.set_title(panel_title, fontsize=10, fontweight="bold")
+            ax.grid(True, linestyle="--", alpha=0.3)
+
+        for idx in range(n_panels, nrows * ncols):
+            row, col = divmod(idx, ncols)
+            axes_grid[row, col].set_visible(False)
+
+        for col in range(ncols):
+            lowest_visible_ax = None
+            for row in range(nrows - 1, -1, -1):
+                ax = axes_grid[row, col]
+                if ax.get_visible():
+                    lowest_visible_ax = ax
+                    break
+            if lowest_visible_ax is not None:
+                lowest_visible_ax.set_xlabel(xlabel, fontsize=9)
+                lowest_visible_ax.tick_params(axis="x", labelbottom=True)
+        for row in range(nrows):
+            axes_grid[row, 0].set_ylabel(ylabel, fontsize=9)
+        if xticks is not None:
+            for row in range(nrows):
+                for col in range(ncols):
+                    ax = axes_grid[row, col]
+                    if ax.get_visible():
+                        ax.set_xticks(xticks)
+
+        if suptitle:
+            fig.suptitle(suptitle, fontsize=12, fontweight="bold", y=1.01)
+        plt.tight_layout()
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
+
+        return fig
+
+    @staticmethod
     def plot_optimization_results(
         optimizer: PipelineOptimizer,
         top_n: int = 5,

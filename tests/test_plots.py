@@ -78,6 +78,18 @@ def test_plot_preprocessing_comparison_all_samples_invert(wavenumbers, spectra):
     assert isinstance(fig, Figure)
 
 
+def test_plot_preprocessing_grid_smoke(wavenumbers, spectra):
+    panels = [("Raw", spectra), ("Scaled", spectra * 0.5)]
+    fig = SpectroPrepPlotter.plot_preprocessing_grid(
+        wavenumbers,
+        panels,
+        ncols=2,
+        xlabel="Wavelength (nm)",
+        xticks=[1000, 1500, 2000],
+    )
+    assert isinstance(fig, Figure)
+
+
 def test_plot_optimization_progress_smoke():
     results = [
         {"trial": 0, "pipeline_config": ("snv",), "rmse": 2.0, "r2": float("nan")},

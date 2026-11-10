@@ -73,9 +73,12 @@ class OptimizedRidgeCV(BaseEstimator, RegressorMixin):
             if len(groups) != X.shape[0]:
                 raise ValueError("groups must have the same length as X")
             n_splits = self.cv if isinstance(self.cv, int) else 5
-            # Materialise grouped splits into an explicit (train, test) iterable,
-            # which RidgeCV accepts and which keeps groups intact across folds.
-            return list(GroupKFold(n_splits=n_splits).split(X, y, groups))
+            n_splits = min(n_splits, len(np.unique(groups)))
+            if n_splits >= 2:
+                # Materialise grouped splits into an explicit (train, test) iterable,
+                # which RidgeCV accepts and which keeps groups intact across folds.
+                return list(GroupKFold(n_splits=n_splits).split(X, y, groups))
+            # A single group cannot be split; fall through to ordinary k-fold.
         if isinstance(self.cv, int):
             return KFold(n_splits=self.cv, shuffle=True, random_state=42)
         return self.cv

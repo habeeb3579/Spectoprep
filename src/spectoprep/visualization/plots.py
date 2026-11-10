@@ -246,6 +246,7 @@ class SpectroPrepPlotter:
         suptitle: str | None = None,
         xlabel: str = "Wavenumber (cm$^{-1}$)",
         ylabel: str = "Absorbance",
+        ylabels: list[str] | None = None,
         alpha: float = 0.35,
         color_map: str = "viridis",
         xticks: list[float] | None = None,
@@ -255,6 +256,11 @@ class SpectroPrepPlotter:
         Plot multiple preprocessing views in a regular column grid.
 
         Each panel shows all samples for one preprocessing recipe (or raw spectra).
+
+        ``ylabel`` labels the first column. After derivative, scatter-correction or
+        scaling steps the plotted values are no longer absorbance, so ``ylabels``
+        (one string per panel) can be given to label every panel with the quantity
+        it shows; it takes precedence over ``ylabel``.
         """
         if not panels:
             raise ValueError("panels must contain at least one (title, spectra) pair")
@@ -292,8 +298,15 @@ class SpectroPrepPlotter:
             if lowest_visible_ax is not None:
                 lowest_visible_ax.set_xlabel(xlabel, fontsize=9)
                 lowest_visible_ax.tick_params(axis="x", labelbottom=True)
-        for row in range(nrows):
-            axes_grid[row, 0].set_ylabel(ylabel, fontsize=9)
+        if ylabels is not None:
+            if len(ylabels) != n_panels:
+                raise ValueError("ylabels must contain one label per panel")
+            for idx, panel_ylabel in enumerate(ylabels):
+                row, col = divmod(idx, ncols)
+                axes_grid[row, col].set_ylabel(panel_ylabel, fontsize=8)
+        else:
+            for row in range(nrows):
+                axes_grid[row, 0].set_ylabel(ylabel, fontsize=9)
         if xticks is not None:
             for row in range(nrows):
                 for col in range(ncols):
@@ -351,38 +364,56 @@ class SpectroPrepPlotter:
         # Select top N results
         top_results = sorted_results[:top_n]
 
-        # Extract data for plotting. R² is not tracked per trial by the
-        # optimizer (only the RMSE-based objective is), so it arrives as NaN;
-        # substitute 0.0 for the bar heights to keep the plot well-defined.
-        pipelines = [" → ".join(res["pipeline_config"]) for res in top_results]
+        # Extract data for plotting. R² is NaN only when a trial's R² is not
+        # available (e.g. a penalised trial); substitute 0.0 for the bar
+        # heights in that case to keep the plot well-defined.
+        #
+        # Several trials can share a pipeline name (same transforms, different
+        # parameters), so rows are placed by integer position and labelled with
+        # the trial number; plotting by name alone would merge them into one row.
+        pipelines = [
+            f"{' → '.join(res['pipeline_config'])} (trial {res.get('trial', rank)})"
+            for rank, res in enumerate(top_results)
+        ]
         rmses = [res["rmse"] for res in top_results]
         r2s = [
             0.0 if (res["r2"] is None or np.isnan(res["r2"])) else res["r2"] for res in top_results
         ]
+        rows = np.arange(len(top_results))
 
         # Create figure with two subplots
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize, sharex=True)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=figsize)
+
+        def _annotate(ax, values):
+            pad = 0.01 * max(max(abs(v) for v in values), 1e-12)
+            for row, value in zip(rows, values, strict=True):
+                ax.text(
+                    value + (pad if value >= 0 else -pad),
+                    row,
+                    f"{value:.4f}",
+                    va="center",
+                    ha="left" if value >= 0 else "right",
+                    fontsize=10,
+                )
+            ax.set_yticks(rows)
+            ax.set_yticklabels(pipelines)
+            ax.invert_yaxis()  # best pipeline on top
+            ax.margins(x=0.12)
 
         # Plot RMSE values
-        ax1.barh(pipelines, rmses, color="skyblue", alpha=0.8)
+        ax1.barh(rows, rmses, color="skyblue", alpha=0.8)
         ax1.set_title("RMSE (lower is better)", fontsize=12)
         ax1.set_ylabel("Pipeline Configuration")
         ax1.grid(True, linestyle="--", alpha=0.3, axis="x")
-
-        # Add RMSE values as text
-        for i, rmse in enumerate(rmses):
-            ax1.text(rmse + max(rmses) * 0.01, i, f"{rmse:.4f}", va="center", fontsize=10)
+        _annotate(ax1, rmses)
 
         # Plot R² values
-        ax2.barh(pipelines, r2s, color="lightgreen", alpha=0.8)
+        ax2.barh(rows, r2s, color="lightgreen", alpha=0.8)
         ax2.set_title("R² (higher is better)", fontsize=12)
         ax2.set_ylabel("Pipeline Configuration")
         ax2.set_xlabel("Score")
         ax2.grid(True, linestyle="--", alpha=0.3, axis="x")
-
-        # Add R² values as text
-        for i, r2 in enumerate(r2s):
-            ax2.text(r2 + max(r2s) * 0.01, i, f"{r2:.4f}", va="center", fontsize=10)
+        _annotate(ax2, r2s)
 
         plt.suptitle(title, fontsize=16, fontweight="bold")
         plt.tight_layout(rect=(0, 0, 1, 0.96))

@@ -49,6 +49,7 @@ class PipelineOptimizer:
         max_pipeline_length: int = 5,
         n_jobs: int = -1,
         allowed_preprocess_combinations: int | list[int] | tuple[int, ...] | None = None,
+        ridge_alphas: npt.ArrayLike | None = None,
         log_level: str = "INFO",
     ):
         """
@@ -70,6 +71,10 @@ class PipelineOptimizer:
             max_pipeline_length: Maximum number of steps in pipeline.
             n_jobs: Number of parallel jobs for compatible estimators.
             allowed_preprocess_combinations: Allowed lengths for preprocessing combinations.
+            ridge_alphas: Alpha grid searched internally by the downstream
+                ``RidgeCV`` at each evaluation. Defaults to
+                ``np.logspace(-3, 3, 25)``. A single value fixes the penalty,
+                which is useful for two-stage (fixed-model) comparisons.
             log_level: Logging level (INFO, DEBUG, WARNING, ERROR).
         """
         # Set up structured logging. configure_logging validates the level and
@@ -92,13 +97,31 @@ class PipelineOptimizer:
         self.test_size = test_size
         self.n_groups_out = n_groups_out
 
+        # Cross-validated R² of every evaluated parameter set (the objective
+        # itself only tracks RMSE), keyed by the proposed parameters so that
+        # reporting can recover it for each Bayesian-optimization trial.
+        self._trial_r2: dict[tuple, float] = {}
+
         # Store other configuration
+        self.ridge_alphas = (
+            _RIDGE_ALPHAS
+            if ridge_alphas is None
+            else np.atleast_1d(np.asarray(ridge_alphas, dtype=float))
+        )
         self.random_state = random_state
         self.max_pipeline_length = max_pipeline_length
         self.n_jobs = n_jobs
         self.allowed_preprocess_combinations = (
             [1, 2] if allowed_preprocess_combinations is None else allowed_preprocess_combinations
         )
+
+        # Score assigned to a candidate that cannot be evaluated (a transform fails on a
+        # fold, ...): twice the target's standard deviation, i.e. worse than predicting the
+        # mean. A scale-aware value keeps the surrogate model of Bayesian optimisation
+        # well-conditioned, unlike an arbitrary huge constant.
+        y_sd = float(np.std(self.y_train))
+        self.failure_score = -2.0 * y_sd if y_sd > 0 else -1.0
+        self._failed_keys: set[tuple] = set()
 
         # Handle groups
         if groups is not None:
@@ -199,6 +222,33 @@ class PipelineOptimizer:
             return GroupKFold(n_splits=self.n_splits)
         return LeavePGroupsOut(n_groups=self.n_groups_out)
 
+    @staticmethod
+    def _fit_pipeline(pipeline: Pipeline, X, y, groups) -> None:
+        """Fit ``pipeline``, keeping the ridge penalty selection replicate-aware.
+
+        The optimizer scores candidates with group-aware folds, but the downstream
+        ``OptimizedRidgeCV`` also runs its own internal cross-validation to choose
+        the penalty. When replicates exist (some group has more than one spectrum)
+        those internal folds must respect the groups too, otherwise replicates leak
+        into the penalty selection. When every spectrum is its own group nothing is
+        grouped and the ridge keeps its usual shuffled k-fold.
+        """
+        ridge = pipeline.named_steps.get("ridge") if hasattr(pipeline, "named_steps") else None
+        replicated = groups is not None and len(np.unique(groups)) < len(groups)
+        if ridge is not None and replicated and hasattr(ridge, "groups"):
+            ridge.groups = np.asarray(groups)
+            try:
+                pipeline.fit(X, y)
+            finally:
+                ridge.groups = None
+        else:
+            pipeline.fit(X, y)
+
+    @staticmethod
+    def _trial_key(params: dict) -> tuple:
+        """Hashable key identifying one evaluated parameter set."""
+        return tuple(sorted((name, float(value)) for name, value in params.items()))
+
     def bayes_objective(self, **params) -> float:
         """Objective function for Bayesian optimization.
 
@@ -214,7 +264,8 @@ class PipelineOptimizer:
 
         Returns:
             float: Negative cross-validated RMSE, or a large penalty
-            (``-1e6``) if no valid predictions could be produced.
+            (``failure_score``, twice the target's standard deviation) if no valid
+            predictions could be produced.
         """
         try:
             # Extract pipeline configuration index and limit to valid range
@@ -232,7 +283,7 @@ class PipelineOptimizer:
 
             # Add a cross-validated Ridge as the final estimator; its penalty is
             # selected internally by RidgeCV rather than by the Bayesian search.
-            steps.append(("ridge", OptimizedRidgeCV(alphas=_RIDGE_ALPHAS)))
+            steps.append(("ridge", OptimizedRidgeCV(alphas=self.ridge_alphas)))
             pipeline = Pipeline(steps)
 
             # Configure group-aware cross-validation on the training data.
@@ -254,7 +305,7 @@ class PipelineOptimizer:
                         self.log.warning("fold_skipped_high_condition", config=pipeline_config)
                         continue
 
-                    pipeline.fit(X_train_fold, y_train_fold)
+                    self._fit_pipeline(pipeline, X_train_fold, y_train_fold, self.groups[train_idx])
                     preds = pipeline.predict(X_val_fold)
                     preds = np.ravel(preds)
                     all_predictions.extend(preds)
@@ -270,10 +321,16 @@ class PipelineOptimizer:
             # Check if we have valid predictions
             if not all_predictions:
                 self.log.warning("trial_no_valid_predictions", config=pipeline_config)
-                return -1e6  # Penalty score
+                self._failed_keys.add(self._trial_key(params))
+                return self.failure_score  # Penalty score
 
             # Calculate metrics
-            rmse = np.sqrt(mean_squared_error(np.array(all_actuals), np.array(all_predictions)))
+            actual = np.array(all_actuals)
+            rmse = np.sqrt(mean_squared_error(actual, np.array(all_predictions)))
+            ss_tot = float(np.sum((actual - actual.mean()) ** 2))
+            if ss_tot > 0:
+                ss_res = float(np.sum((actual - np.array(all_predictions)) ** 2))
+                self._trial_r2[self._trial_key(params)] = 1.0 - ss_res / ss_tot
             score = -rmse
 
             self.log.info("cv_evaluated", config=pipeline_config, rmse=float(rmse))
@@ -281,10 +338,32 @@ class PipelineOptimizer:
 
         except Exception:
             self.log.error("bayes_objective_failed", exc_info=True)
-            return -1e6  # Penalty score for failed configurations
+            self._failed_keys.add(self._trial_key(params))
+            return self.failure_score  # Penalty score for failed configurations
+
+    def _acquisition(self, name: str):
+        """Build the acquisition object for ``name`` (``None`` keeps the library default).
+
+        ``"ucb"`` is the default of the ``bayesian-optimization`` library (upper
+        confidence bound, kappa 2.576) and is returned as ``None`` so that default
+        behaviour is unchanged. ``"ei"`` and ``"poi"`` need the acquisition classes of
+        ``bayesian-optimization`` >= 2.
+        """
+        if name == "ucb":
+            return None
+        try:
+            from bayes_opt import acquisition
+        except ImportError:  # bayesian-optimization < 2 passes ``acq=`` to ``maximize`` instead
+            return None
+        cls = (
+            acquisition.ExpectedImprovement
+            if name == "ei"
+            else acquisition.ProbabilityOfImprovement
+        )
+        return cls(xi=0.01, random_state=self.random_state)
 
     def bayesian_optimize(
-        self, init_points: int = 10, n_iter: int = 50, acquisition_function: str = "ei"
+        self, init_points: int = 10, n_iter: int = 50, acquisition_function: str = "ucb"
     ) -> tuple[dict, Pipeline]:
         """
         Run Bayesian optimization to find the best pipeline configuration and hyperparameters.
@@ -292,30 +371,40 @@ class PipelineOptimizer:
         Args:
             init_points: Number of random initial points
             n_iter: Number of Bayesian optimization iterations
-            acquisition_function: Acquisition function for Bayesian optimization
+            acquisition_function: ``"ucb"`` (upper confidence bound, the library
+                default and the default here), ``"ei"`` (expected improvement) or
+                ``"poi"`` (probability of improvement).
 
         Returns:
             Tuple containing:
                 - Dict of best parameters
                 - Fitted Pipeline with best configuration
         """
-        # Create optimizer
+        # Validate the acquisition function
+        if acquisition_function not in ["ucb", "ei", "poi"]:
+            self.log.warning(
+                "unknown_acquisition_function", requested=acquisition_function, fallback="ucb"
+            )
+            acquisition_function = "ucb"
+        acquisition = self._acquisition(acquisition_function)
+
+        # Create optimizer (``acquisition=None`` keeps the library default, UCB)
         optimizer = BayesianOptimization(
             f=self.bayes_objective,
             pbounds=self.param_bounds,
             random_state=self.random_state,
             verbose=2,
+            **({"acquisition_function": acquisition} if acquisition is not None else {}),
         )
 
-        # Set acquisition function
-        if acquisition_function not in ["ucb", "ei", "poi"]:
-            self.log.warning(
-                "unknown_acquisition_function", requested=acquisition_function, fallback="ei"
-            )
-            acquisition_function = "ei"
-
         # Run optimization
-        optimizer.maximize(init_points=init_points, n_iter=n_iter)
+        if acquisition is None and acquisition_function != "ucb":
+            # bayesian-optimization < 2: select the acquisition function in maximize()
+            optimizer.maximize(  # type: ignore[call-arg]
+                init_points=init_points, n_iter=n_iter, acq=acquisition_function, xi=0.01
+            )
+        else:
+            optimizer.maximize(init_points=init_points, n_iter=n_iter)
 
         # Store optimizer for later analysis
         self.optimizer = optimizer
@@ -339,10 +428,10 @@ class PipelineOptimizer:
             )
             steps.append((step, transformer))
 
-        steps.append(("ridge", OptimizedRidgeCV(alphas=_RIDGE_ALPHAS)))
+        steps.append(("ridge", OptimizedRidgeCV(alphas=self.ridge_alphas)))
 
         best_pipeline = Pipeline(steps)
-        best_pipeline.fit(self.X_train, self.y_train)
+        self._fit_pipeline(best_pipeline, self.X_train, self.y_train, self.groups)
 
         # Log best pipeline details
         self.log.info(
@@ -370,7 +459,7 @@ class PipelineOptimizer:
                 - R² score
         """
         # Fit the pipeline to training data
-        best_pipeline.fit(self.X_train, self.y_train)
+        self._fit_pipeline(best_pipeline, self.X_train, self.y_train, self.groups)
 
         # If test data is available, use it for evaluation
         if self.X_test is not None:
@@ -392,7 +481,9 @@ class PipelineOptimizer:
                 X_val_fold = self.X_train[val_idx]
                 y_train_fold = self.y_train[train_idx]
 
-                best_pipeline.fit(X_train_fold, y_train_fold)
+                self._fit_pipeline(
+                    best_pipeline, X_train_fold, y_train_fold, self.groups[train_idx]
+                )
                 preds[val_idx] = np.ravel(best_pipeline.predict(X_val_fold))
 
             if np.isnan(preds).any():
@@ -426,18 +517,20 @@ class PipelineOptimizer:
             pipeline_config = self.all_pipelines[pipeline_index]
 
             # Calculate metrics from the saved objective score (negative RMSE)
-            rmse = -res["target"] if res["target"] > -1e5 else float("inf")
+            failed = self._trial_key(params) in self._failed_keys
+            rmse = float("inf") if failed else -res["target"]
+            r2 = self._trial_r2.get(self._trial_key(params), float("nan"))
 
-            # Create a dictionary with trial information. R² is not tracked by
-            # the optimizer (only the negative-RMSE objective is stored), so it
-            # is reported as NaN rather than None to keep downstream numeric
-            # code (sorting, plotting) from raising on a None value.
+            # Create a dictionary with trial information. R² is the pooled
+            # cross-validated R² recorded when the trial was scored; it is NaN
+            # (never None) if unavailable, e.g. for penalised trials, so that
+            # downstream numeric code (sorting, plotting) does not raise.
             result_dict = {
                 "trial": i,
                 "pipeline_config": pipeline_config,
                 "params": {k: v for k, v in params.items() if k != "pipeline_config"},
                 "rmse": rmse,
-                "r2": float("nan"),
+                "r2": r2,
             }
             results.append(result_dict)
 
@@ -548,7 +641,11 @@ class PipelineOptimizer:
             "best_pipeline": list(best_pipeline_config),
             "improvement": improvement,
             "converged": converged,
-            "best_rmse": -final_performance if final_performance > -1e5 else float("inf"),
+            "best_rmse": (
+                float("inf")
+                if self._trial_key(best_params) in self._failed_keys
+                else -final_performance
+            ),
         }
 
         return summary

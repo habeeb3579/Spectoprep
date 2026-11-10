@@ -19,6 +19,7 @@ from spectoprep.pipeline.utils import choose_nearest
 
 # Import custom preprocessing components with explicit, correct names.
 from spectoprep.preprocessing.baseline import ALSBaselineCorrection, DetrendTransformer
+from spectoprep.preprocessing.capped import CappedComponents
 from spectoprep.preprocessing.norml import (
     Autoscaling,
     GlobalScaler,
@@ -92,9 +93,11 @@ def build_preprocessor_from_bayes(
     elif name == "scaler":
         return StandardScaler()
     elif name == "pca":
-        return PCA(
-            n_components=min(int(round(params["pca_n_components"])), X_train_shape[1]),
-            random_state=random_state,
+        return CappedComponents(
+            PCA(
+                n_components=min(int(round(params["pca_n_components"])), X_train_shape[1]),
+                random_state=random_state,
+            )
         )
 
     # New preprocessors
@@ -126,28 +129,34 @@ def build_preprocessor_from_bayes(
     elif name == "fast_ica":
         n_components = int(round(params["ica_n_components"]))
         n_components = min(n_components, X_train_shape[1])
-        return FastICA(n_components=n_components, random_state=random_state, max_iter=1000)
+        return CappedComponents(
+            FastICA(n_components=n_components, random_state=random_state, max_iter=1000)
+        )
     elif name == "kernel_pca":
         n_components = int(round(params["kpca_n_components"]))
         n_components = min(n_components, X_train_shape[1])
         kernel = ["linear", "poly", "rbf", "sigmoid"][int(round(params["kpca_kernel"]))]
-        return KernelPCA(
-            n_components=n_components,
-            kernel=kernel,
-            gamma=params["kpca_gamma"],
-            random_state=random_state,
-            n_jobs=n_jobs,
+        return CappedComponents(
+            KernelPCA(
+                n_components=n_components,
+                kernel=kernel,
+                gamma=params["kpca_gamma"],
+                random_state=random_state,
+                n_jobs=n_jobs,
+            )
         )
     elif name == "lle":
         n_components = int(round(params["lle_n_components"]))
         n_components = min(n_components, X_train_shape[1])
         n_neighbors = int(round(params["lle_n_neighbors"]))
         n_neighbors = min(n_neighbors, X_train_shape[0] - 1)
-        return LocallyLinearEmbedding(
-            n_components=n_components,
-            n_neighbors=max(5, n_neighbors),
-            random_state=random_state,
-            n_jobs=n_jobs,
+        return CappedComponents(
+            LocallyLinearEmbedding(
+                n_components=n_components,
+                n_neighbors=max(5, n_neighbors),
+                random_state=random_state,
+                n_jobs=n_jobs,
+            )
         )
     elif name == "select_k_best":
         k = int(round(params["skb_k"]))

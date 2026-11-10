@@ -111,3 +111,25 @@ ENV/
 # Manuscript / SoftwareX paper materials (kept local; not part of the package)
 vitamin_publication/
 
+
+# Revision experiments (SoftwareX review): new folders and scripts, kept local
+examples/revision_results/
+examples/revision_results_expanded/
+examples/revision_results_milk/
+examples/revision_results_search/
+examples/revision_results_v2/
+examples/revision_results_v3/
+examples/reviewer1_statistics/
+examples/data/agropur/
+examples/analyze_expanded.py
+examples/analyze_milk_experiments.py
+examples/analyze_reviewer1_statistics.py
+examples/analyze_revision_experiments.py
+examples/analyze_search_comparison.py
+examples/make_milk_figures.py
+examples/make_revision_tables.py
+examples/milk_data.py
+examples/run_expanded_experiments.py
+examples/run_milk_experiments.py
+examples/run_revision_experiments.py
+examples/run_search_comparison.py

@@ -33,4 +33,4 @@ def test_savgol_window_snapped_to_allowed():
 
 def test_pca_components_capped_by_features():
     t = build_preprocessor_from_bayes("pca", {**PARAMS, "pca_n_components": 999}, X_SHAPE, 0, 1)
-    assert t.n_components <= X_SHAPE[1]
+    assert t.estimator.n_components <= X_SHAPE[1]  # PCA sits inside the fit-time component cap

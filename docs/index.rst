@@ -31,8 +31,9 @@ penalty is selected by cross-validation.
 Why SpectoPrep?
 ---------------
 
-* **Joint search** — pipeline structure and transform hyperparameters in one
-  Bayesian loop.
+* **Nested search** — Bayesian search over pipeline structure and transform
+  parameters, with the ridge penalty selected exactly by ``RidgeCV`` inside every
+  evaluation.
 * **Group-aware CV** — ``group_kfold``, ``group_shuffle_split``, or
   ``leave_p_group_out`` so replicate spectra stay together.
 * **Modern ridge backend** — downstream

@@ -104,13 +104,20 @@ class TestObjective:
         # savgol requires transform parameters that are absent here, so the
         # objective hits its except branch and returns the penalty score.
         opt = _make(regression_data, preprocessing_steps=["savgol"])
-        assert opt.bayes_objective(pipeline_config=0.0) == -1e6
+        assert opt.bayes_objective(pipeline_config=0.0) == opt.failure_score
+        assert opt.failure_score < 0  # scale-aware: -2 * std(y_train)
 
     def test_ridge_alpha_not_in_search_space(self, regression_data):
         # The downstream RidgeCV selects its own penalty, so ridge_alpha is
         # not a Bayesian search dimension.
         opt = _make(regression_data)
         assert "ridge_alpha" not in opt.param_bounds
+
+    def test_ridge_alphas_default_and_override(self, regression_data):
+        opt = _make(regression_data)
+        assert len(opt.ridge_alphas) == 25
+        fixed = _make(regression_data, ridge_alphas=1.0)
+        assert fixed.ridge_alphas.tolist() == [1.0]
 
 
 class TestStubbedSummaries:
@@ -131,7 +138,7 @@ class TestStubbedSummaries:
         assert summary["best_score"] == -0.5
         assert summary["best_rmse"] == pytest.approx(0.5)
 
-    def test_get_all_tested_r2_is_nan(self, regression_data):
+    def test_get_all_tested_r2_is_nan_without_tracking(self, regression_data):
         opt = self._attach_stub(_make(regression_data))
         results = opt.get_all_tested_pipelines()
         assert len(results) == 2
@@ -175,3 +182,91 @@ def test_end_to_end_optimize(regression_data):
     from sklearn.metrics import r2_score
 
     assert r2_score(regression_data[1], preds) == pytest.approx(r2, rel=1e-6)
+
+
+def test_tested_pipelines_report_cross_validated_r2(regression_data):
+    """Regression test: per-trial R² must be recorded, not left as NaN."""
+    opt = _make(regression_data, cv_method="group_kfold")
+    opt.bayesian_optimize(init_points=3, n_iter=2)
+    results = opt.get_all_tested_pipelines()
+    assert len(results) == 5
+    # Trials that fail to score (e.g. a Savitzky-Golay window wider than the
+    # 10 features here) get the penalty and legitimately have no R².
+    scored = [r for r in results if np.isfinite(r["rmse"])]
+    assert len(scored) >= 2
+    assert all(np.isfinite(r["r2"]) and r["r2"] <= 1.0 for r in scored)
+    assert all(np.isnan(r["r2"]) for r in results if not np.isfinite(r["rmse"]))
+    # R² is the pooled-CV counterpart of the RMSE the search minimised, so
+    # the scored trial with the lowest RMSE has the highest R².
+    best_rmse = min(scored, key=lambda r: r["rmse"])
+    best_r2 = max(scored, key=lambda r: r["r2"])
+    assert best_rmse["r2"] == pytest.approx(best_r2["r2"])
+
+
+def _groups_shared(pipeline, X, y, groups):
+    cv = pipeline.named_steps["ridge"].ridge_cv_.cv
+    splits = list(cv.split(X, y)) if hasattr(cv, "split") else list(cv)
+    return [len(set(groups[tr]) & set(groups[te])) for tr, te in splits]
+
+
+def test_ridge_penalty_selection_is_group_aware_with_replicates(regression_data):
+    """Replicates must not leak into the ridge's internal penalty selection."""
+    from sklearn.pipeline import Pipeline
+
+    from spectoprep.modelling.ridge import OptimizedRidgeCV
+
+    X, y, groups = regression_data  # 10 groups x 3 replicates
+    opt = _make(regression_data)
+    pipe = Pipeline([("ridge", OptimizedRidgeCV(alphas=[0.1, 1.0]))])
+    PipelineOptimizer._fit_pipeline(pipe, X, y, groups)
+    assert all(n == 0 for n in _groups_shared(pipe, X, y, groups))
+    # The grouping is applied only for this fit; the returned estimator is left clean.
+    assert pipe.named_steps["ridge"].groups is None
+    assert opt.groups.shape[0] == len(y)
+
+
+def test_ridge_penalty_selection_unchanged_without_replicates(regression_data):
+    """With one group per spectrum the ridge keeps its ordinary shuffled k-fold."""
+    from sklearn.pipeline import Pipeline
+
+    from spectoprep.modelling.ridge import OptimizedRidgeCV
+
+    X, y, _ = regression_data
+    pipe = Pipeline([("ridge", OptimizedRidgeCV(alphas=[0.1, 1.0]))])
+    PipelineOptimizer._fit_pipeline(pipe, X, y, np.arange(len(y)))
+    reference = Pipeline([("ridge", OptimizedRidgeCV(alphas=[0.1, 1.0]))]).fit(X, y)
+    assert pipe.named_steps["ridge"].alpha_ == reference.named_steps["ridge"].alpha_
+    assert pipe.named_steps["ridge"].groups is None
+
+
+def test_group_aware_ridge_handles_fewer_groups_than_folds():
+    from spectoprep.modelling.ridge import OptimizedRidgeCV
+
+    rng = np.random.default_rng(0)
+    X, y = rng.normal(size=(12, 4)), rng.normal(size=12)
+    groups = np.repeat([0, 1, 2], 4)  # 3 groups < default 5 folds
+    model = OptimizedRidgeCV(alphas=[0.1, 1.0], groups=groups).fit(X, y)
+    assert np.isfinite(model.alpha_)
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("ucb", "UpperConfidenceBound"),
+        ("ei", "ExpectedImprovement"),
+        ("poi", "ProbabilityOfImprovement"),
+    ],
+)
+def test_acquisition_function_is_honoured(regression_data, name, expected):
+    """Regression test: the requested acquisition function must reach the optimizer."""
+    pytest.importorskip("bayes_opt.acquisition")
+    opt = _make(regression_data, cv_method="group_kfold")
+    opt.bayesian_optimize(init_points=2, n_iter=1, acquisition_function=name)
+    assert type(opt.optimizer._acquisition_function).__name__ == expected
+
+
+def test_unknown_acquisition_function_falls_back_to_default(regression_data):
+    pytest.importorskip("bayes_opt.acquisition")
+    opt = _make(regression_data, cv_method="group_kfold")
+    opt.bayesian_optimize(init_points=2, n_iter=1, acquisition_function="nonsense")
+    assert type(opt.optimizer._acquisition_function).__name__ == "UpperConfidenceBound"

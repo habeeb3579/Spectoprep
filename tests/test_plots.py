@@ -109,3 +109,14 @@ def test_plot_feature_importance(wavenumbers, rng):
         wavenumbers, coefs, highlight_threshold=0.5
     )
     assert isinstance(fig, Figure)
+
+
+def test_plot_preprocessing_grid_per_panel_ylabels():
+    wl = np.linspace(1100, 2500, 30)
+    panels = [("Raw", np.ones((3, 30))), ("SNV", np.zeros((3, 30))), ("Scaler", np.ones((3, 30)))]
+    labels = ["Absorbance", "SNV-transformed (unitless)", "z-score"]
+    fig = SpectroPrepPlotter.plot_preprocessing_grid(wl, panels, ncols=2, ylabels=labels)
+    shown = [ax.get_ylabel() for ax in fig.axes if ax.get_visible()]
+    assert shown == labels
+    with pytest.raises(ValueError, match="one label per panel"):
+        SpectroPrepPlotter.plot_preprocessing_grid(wl, panels, ncols=2, ylabels=labels[:2])
